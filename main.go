@@ -56,7 +56,11 @@ func main() {
 	json.Unmarshal(body,&data)
 
 	for _, p := range data.Items {
-
+     fmt.Println(
+        p.Name,
+        p.PriceBefore,
+        p.Price,
+    )
 		if p.PriceBefore == 0 {
 			continue
 		}

@@ -12,7 +12,6 @@ import (
     tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-func main() {
 
 	type Item struct {
 	Name      string `json:"name"`
@@ -93,4 +92,3 @@ Diskon : %.1f%%`,
 	}
 }
 
-}

@@ -54,7 +54,7 @@ func main() {
 	var data Response
 
 	json.Unmarshal(body,&data)
-
+    fmt.Println("Jumlah produk:", len(data.Items))
 	for _, p := range data.Items {
      fmt.Println(
         p.Name,

@@ -9,22 +9,42 @@ const browser = await chromium.launch({
 const page = await browser.newPage();
 
 await page.goto(
-    "https://www.blibli.com",
-    {
-        waitUntil:"domcontentloaded"
-    }
+"https://www.blibli.com",
+{
+waitUntil:"networkidle"
+}
 );
 
 await page.waitForTimeout(5000);
 
-await page.screenshot({
-    path:"debug.png",
-    fullPage:true
+const products=await page.evaluate(()=>{
+
+const items=[];
+
+document
+.querySelectorAll("div")
+
+.forEach(x=>{
+
+const text=x.innerText?.trim();
+
+if(
+text &&
+text.length>10 &&
+text.length<100
+){
+
+items.push(text);
+
+}
+
 });
 
-console.log(
-    await page.title()
-);
+return items.slice(0,20);
+
+});
+
+console.log(products);
 
 await browser.close();
 

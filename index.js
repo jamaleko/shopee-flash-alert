@@ -1,63 +1,49 @@
 const { chromium } = require("playwright");
 
-(async () => {
+(async()=>{
 
-    const browser = await chromium.launch({
-        headless: true
-    });
+const browser=await chromium.launch({
+    headless:true
+});
 
-    const page = await browser.newPage({
+const page=await browser.newPage({
 
-        userAgent:
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
+    userAgent:
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
 
-    });
+});
 
-    try {
+try{
 
-        console.log("Membuka Blibli...");
+console.log("Buka Blibli");
 
-        await page.goto(
-            "https://www.blibli.com/flashsale",
-            {
-                waitUntil: "domcontentloaded",
-                timeout: 60000
-            }
-        );
+await page.goto(
+"https://www.blibli.com/flashsale",
+{
+    waitUntil:"domcontentloaded",
+    timeout:60000
+}
+);
 
-        console.log("Menunggu halaman...");
+await page.waitForTimeout(10000);
 
-        await page.waitForTimeout(10000);
+console.log(
+await page.title()
+);
 
-        const title = await page.title();
+await page.screenshot({
+    path:"debug.png",
+    fullPage:true
+});
 
-        console.log(
-            "Judul halaman:",
-            title
-        );
+console.log("Screenshot dibuat");
 
-        await page.screenshot({
+}catch(e){
 
-            path: "debug.png",
+console.log(e);
 
-            fullPage: true
+}
 
-        });
-
-        console.log(
-            "screenshot dibuat"
-        );
-
-    } catch(err){
-
-        console.log(
-            "ERROR:"
-        );
-
-        console.log(err);
-
-    }
-
-    await browser.close();
+await browser.close();
 
 })();

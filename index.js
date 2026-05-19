@@ -9,7 +9,7 @@ const browser = await chromium.launch({
 const page = await browser.newPage();
 
 await page.goto(
-"https://www.blibli.com",
+"https://www.blibli.com/flashsale",
 {
 waitUntil:"networkidle"
 }

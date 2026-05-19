@@ -83,10 +83,11 @@ resp, err := client.Do(req)
 	var data Response
 
 	json.Unmarshal(body,&data)
-    fmt.Println(
-    "Jumlah produk:",
-    len(data.Data.Items),
-)
+    if len(body) > 1000 {
+    fmt.Println(string(body[:1000]))
+} else {
+    fmt.Println(string(body))
+}
 
 for _, p := range data.Data.Items {
      fmt.Println(

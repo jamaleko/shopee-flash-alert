@@ -1,7 +1,9 @@
 {
-  "name":"shopee-alert",
+  "name":"blibli-test",
   "dependencies":{
-    "playwright":"latest",
-    "node-telegram-bot-api":"latest"
+    "playwright":"latest"
+  },
+  "scripts":{
+    "start":"node index.js"
   }
 }

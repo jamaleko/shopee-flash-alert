@@ -12,8 +12,7 @@ import (
     tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-
-	type Item struct {
+type Item struct {
 	Name      string `json:"name"`
 	Price     int64  `json:"price"`
 	PriceBefore int64 `json:"price_before_discount"`
@@ -91,4 +90,3 @@ Diskon : %.1f%%`,
 		}
 	}
 }
-

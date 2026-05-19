@@ -1,0 +1,7 @@
+{
+  "name":"shopee-alert",
+  "dependencies":{
+    "playwright":"latest",
+    "node-telegram-bot-api":"latest"
+  }
+}

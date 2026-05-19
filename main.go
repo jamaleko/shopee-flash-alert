@@ -41,7 +41,34 @@ func main() {
 
 	url := "https://shopee.co.id/api/v4/flash_sale/flash_sale_get_items"
 
-	resp, err := http.Get(url)
+	client := &http.Client{}
+
+req, err := http.NewRequest(
+    "GET",
+    url,
+    nil,
+)
+
+if err != nil {
+    log.Fatal(err)
+}
+
+req.Header.Set(
+    "User-Agent",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36",
+)
+
+req.Header.Set(
+    "Referer",
+    "https://shopee.co.id/",
+)
+
+req.Header.Set(
+    "Accept",
+    "application/json",
+)
+
+resp, err := client.Do(req)
 
 	if err != nil {
 		log.Fatal(err)
@@ -54,7 +81,7 @@ func main() {
 	var data Response
 
 	json.Unmarshal(body,&data)
-    fmt.Println(string(body))
+    fmt.Println("Jumlah produk:", len(data.Items))
 	for _, p := range data.Items {
      fmt.Println(
         p.Name,

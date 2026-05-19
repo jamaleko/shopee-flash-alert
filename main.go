@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -13,7 +14,7 @@ func main() {
 	botToken := os.Getenv("BOT_TOKEN")
 
 	chatIDStr := os.Getenv("CHAT_ID")
-	chatID, err := strconv.ParseInt(chatIDStr, 10, 64)
+	chatID, err := strconv.ParseInt(chatIDStr,10,64)
 
 	if err != nil {
 		log.Fatal(err)
@@ -25,13 +26,37 @@ func main() {
 		log.Fatal(err)
 	}
 
-	msg := tgbotapi.NewMessage(chatID, "🔥 Test GitHub Action berhasil")
+	productName := "SSD NVMe 1TB"
 
-	_, err = bot.Send(msg)
+	normalPrice := 850000
+	currentPrice := 35000
 
-	if err != nil {
-		log.Fatal(err)
+	discount := float64(normalPrice-currentPrice) /
+		float64(normalPrice)
+
+	if discount >= 0.90 {
+
+		text := fmt.Sprintf(
+`🔥 DISKON GILA
+
+%s
+
+Normal : Rp%d
+Sekarang : Rp%d
+Diskon : %.1f%%`,
+			productName,
+			normalPrice,
+			currentPrice,
+			discount*100,
+		)
+
+		msg := tgbotapi.NewMessage(chatID, text)
+
+		_, err = bot.Send(msg)
+
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	log.Println("Pesan terkirim")
 }

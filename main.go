@@ -19,7 +19,9 @@ type Item struct {
 }
 
 type Response struct {
-	Items []Item `json:"items"`
+	Data struct {
+		Items []Item `json:"items"`
+	} `json:"data"`
 }
 
 func main() {
@@ -81,8 +83,12 @@ resp, err := client.Do(req)
 	var data Response
 
 	json.Unmarshal(body,&data)
-    fmt.Println("Jumlah produk:", len(data.Items))
-	for _, p := range data.Items {
+    fmt.Println(
+    "Jumlah produk:",
+    len(data.Data.Items),
+)
+
+for _, p := range data.Data.Items {
      fmt.Println(
         p.Name,
         p.PriceBefore,

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -10,12 +11,6 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-const (
-	botToken := os.Getenv("BOT_TOKEN")
-
-chatIDStr := os.Getenv("CHAT_ID")
-chatID, _ := strconv.ParseInt(chatIDStr,10,64)
-)
 
 func parsePrice(s string) int {
 
@@ -30,6 +25,10 @@ func parsePrice(s string) int {
 }
 
 func main() {
+	botToken := os.Getenv("BOT_TOKEN")
+
+	chatIDStr := os.Getenv("CHAT_ID")
+	chatID, _ := strconv.ParseInt(chatIDStr,10,64)
 
 	bot, err := tgbotapi.NewBotAPI(botToken)
 

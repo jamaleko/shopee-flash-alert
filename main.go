@@ -1,13 +1,28 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"os"
-	"strconv"
+    "encoding/json"
+    "fmt"
+    "io"
+    "log"
+    "net/http"
+    "os"
+    "strconv"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+    tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
+
+func main() {
+
+	type Item struct {
+	Name      string `json:"name"`
+	Price     int64  `json:"price"`
+	PriceBefore int64 `json:"price_before_discount"`
+}
+
+type Response struct {
+	Items []Item `json:"items"`
+}
 
 func main() {
 
@@ -26,17 +41,35 @@ func main() {
 		log.Fatal(err)
 	}
 
-	productName := "SSD NVMe 1TB"
+	url := "https://shopee.co.id/api/v4/flash_sale/flash_sale_get_items"
 
-	normalPrice := 850000
-	currentPrice := 35000
+	resp, err := http.Get(url)
 
-	discount := float64(normalPrice-currentPrice) /
-		float64(normalPrice)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	if discount >= 0.90 {
+	defer resp.Body.Close()
 
-		text := fmt.Sprintf(
+	body, _ := io.ReadAll(resp.Body)
+
+	var data Response
+
+	json.Unmarshal(body,&data)
+
+	for _, p := range data.Items {
+
+		if p.PriceBefore == 0 {
+			continue
+		}
+
+		discount := float64(
+			p.PriceBefore-p.Price,
+		)/float64(p.PriceBefore)
+
+		if discount >= 0.90 {
+
+			text := fmt.Sprintf(
 `🔥 DISKON GILA
 
 %s
@@ -44,19 +77,20 @@ func main() {
 Normal : Rp%d
 Sekarang : Rp%d
 Diskon : %.1f%%`,
-			productName,
-			normalPrice,
-			currentPrice,
-			discount*100,
-		)
+				p.Name,
+				p.PriceBefore,
+				p.Price,
+				discount*100,
+			)
 
-		msg := tgbotapi.NewMessage(chatID, text)
+			msg := tgbotapi.NewMessage(
+				chatID,
+				text,
+			)
 
-		_, err = bot.Send(msg)
-
-		if err != nil {
-			log.Fatal(err)
+			bot.Send(msg)
 		}
 	}
+}
 
 }

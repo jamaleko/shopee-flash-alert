@@ -1,6 +1,26 @@
-- run: node index.js
+name: Shopee Alertu
 
-- uses: actions/upload-artifact@v4
-  with:
-    name: debug
-    path: debug.png
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+
+      - run: npm install
+
+      - run: npx playwright install chromium
+
+      - run: node index.js
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debug
+          path: debug.png

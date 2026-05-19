@@ -15,7 +15,24 @@ waitUntil:"domcontentloaded"
 }
 );
 
-await page.waitForTimeout(10000);
+await page.waitForTimeout(3000);
+
+
+// pilih Bahasa Indonesia jika muncul
+
+const indoButton=
+page.locator(
+'text=Bahasa Indonesia'
+);
+
+if(await indoButton.count()>0){
+
+    await indoButton.click();
+
+    await page.waitForTimeout(
+        5000
+    );
+}
 
 await page.screenshot({
 path:"debug.png",

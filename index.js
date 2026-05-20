@@ -1,8 +1,8 @@
 const { chromium } = require("playwright");
 
-async function checkFlashsale() {
+async function checkFlashsale(){
 
-const browser=await chromium.launch({
+const browser = await chromium.launch({
 headless:true,
 args:[
 "--no-sandbox",
@@ -11,21 +11,9 @@ args:[
 ]
 });
 
-const page=await browser.newPage();
+const page = await browser.newPage();
 
 try{
-
-console.log("Buka flashsale...");
-
-await page.goto(
-"https://www.blibli.com/flashsale",
-{
-waitUntil:"domcontentloaded",
-timeout:60000
-}
-);
-
-try {
 
 console.log("Buka flashsale...");
 
@@ -44,7 +32,7 @@ await page.title()
 
 await page.waitForTimeout(15000);
 
-const products = await page.evaluate(() => {
+const products = await page.evaluate(()=>{
 
 let result=[];
 
@@ -61,20 +49,22 @@ result.push(text);
 
 });
 
-return [...new Set(result)]
-.slice(0,50);
+return [...new Set(result)].slice(0,50);
 
 });
 
 console.log("=== PRODUK ===");
 
-products.forEach(x=>{
-console.log(x);
+products.forEach(item=>{
+console.log(item);
 });
 
 }catch(err){
 
-console.log("ERROR:",err.message);
+console.log(
+"ERROR:",
+err.message
+);
 
 }
 

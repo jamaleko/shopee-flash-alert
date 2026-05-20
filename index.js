@@ -1,35 +1,40 @@
 const { chromium } = require("playwright");
 
-(async () => {
-  const browser = await chromium.launch({
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage"
+(async()=>{
+
+const browser = await chromium.launch({
+    headless:true,
+    args:[
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage"
     ]
-  });
+});
 
-  const page = await browser.newPage();
+const page = await browser.newPage();
 
-  await page.goto("https://www.blibli.com", {
-    waitUntil: "domcontentloaded",
-    timeout: 60000
-  });
+await page.goto(
+    "https://www.blibli.com",
+    {
+        waitUntil:"domcontentloaded",
+        timeout:60000
+    }
+);
 
-  console.log(
+console.log(
     "Title:",
     await page.title()
-  );
+);
 
-  // ambil sedikit teks dari halaman
-  const text = await page.locator("body").innerText();
+// ambil HTML langsung, lebih ringan
+const html = await page.content();
 
-  console.log(
-    text.slice(0, 500)
-  );
+console.log(
+    html.substring(0,500)
+);
 
-  await browser.close();
+await browser.close();
 
-  console.log("Done");
+console.log("Done");
+
 })();

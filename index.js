@@ -1,19 +1,24 @@
 const { chromium } = require("playwright");
 
 (async () => {
-    console.log("Playwright OK");
+  const browser = await chromium.launch({
+    headless: true
+  });
 
-    const browser = await chromium.launch({
-        headless: true,
-        args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox"
-        ]
-    });
+  const page = await browser.newPage();
 
-    console.log("Browser OK");
+  await page.goto("https://www.blibli.com", {
+    waitUntil: "networkidle"
+  });
 
-    await browser.close();
+  console.log("Title:", await page.title());
 
-    setInterval(()=>{},1000);
+  await page.screenshot({
+    path: "debug.png",
+    fullPage: true
+  });
+
+  await browser.close();
+
+  console.log("Done");
 })();

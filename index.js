@@ -1,10 +1,10 @@
-const puppeteer = require("puppeteer");
-const axios = require("axios");
+const puppeteer=require("puppeteer");
+const axios=require("axios");
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const CHAT_ID = process.env.CHAT_ID;
+const BOT_TOKEN=process.env.BOT_TOKEN;
+const CHAT_ID=process.env.CHAT_ID;
 
-const sentProducts = new Set();
+const sentProducts=new Set();
 
 async function sendTelegram(message){
 
@@ -13,12 +13,14 @@ try{
 await axios.post(
 `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
 {
-chat_id: CHAT_ID,
-text: message
+chat_id:CHAT_ID,
+text:message
 }
 );
 
-console.log("Terkirim Telegram");
+console.log(
+"Telegram terkirim"
+);
 
 }catch(err){
 
@@ -33,22 +35,28 @@ err.message
 
 async function run(){
 
-const browser = await puppeteer.launch({
+let browser;
+
+try{
+
+browser=await puppeteer.launch({
 
 headless:true,
 
 args:[
+
 "--no-sandbox",
 "--disable-setuid-sandbox",
 "--disable-dev-shm-usage",
-"--disable-gpu"
+"--disable-gpu",
+"--disable-web-security"
+
 ]
 
 });
 
-try{
-
-const page=await browser.newPage();
+const page=
+await browser.newPage();
 
 await page.setViewport({
 
@@ -58,27 +66,88 @@ height:768
 });
 
 await page.setUserAgent(
+
 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136 Safari/537.36"
+
 );
 
-console.log("Buka flashsale...");
 
-await page.goto(
-"https://www.blibli.com/flashsale",
-{
-waitUntil:"networkidle2",
-timeout:60000
+
+// hemat RAM Northflank
+await page.setRequestInterception(
+true
+);
+
+page.on(
+"request",
+(req)=>{
+
+const type=
+req.resourceType();
+
+if(
+
+type==="image" ||
+type==="font" ||
+type==="media"
+
+){
+
+req.abort();
+
+}else{
+
+req.continue();
+
+}
+
 }
 );
 
-await page.waitForTimeout(
-15000
+
+console.log(
+"Buka flashsale..."
 );
+
+
+await page.goto(
+
+"https://www.blibli.com/flashsale",
+
+{
+
+waitUntil:"domcontentloaded",
+timeout:0
+
+}
+
+);
+
+
+await page.waitForSelector(
+
+".els-fs-compact",
+
+{
+
+timeout:30000
+
+}
+
+);
+
+
+await page.waitForTimeout(
+10000
+);
+
 
 console.log(
 "Title:",
 await page.title()
 );
+
+
 
 const products=
 await page.evaluate(()=>{
@@ -90,11 +159,14 @@ document.querySelectorAll(
 ".els-fs-compact"
 );
 
+
 cards.forEach(card=>{
 
 try{
 
+
 // harga
+
 const priceEl=
 card.querySelector(
 ".els-fs-compact__price span:last-child"
@@ -102,10 +174,13 @@ card.querySelector(
 
 const price=
 priceEl?.innerText
-?.trim() || "";
+?.trim()
+||"";
+
 
 
 // diskon
+
 const discountEl=
 card.querySelector(
 ".els-ribbon__content span"
@@ -118,28 +193,32 @@ discountEl?.innerText
 const discount=
 parseInt(
 discountText.replace(/\D/g,"")
-)||0;
+)
+||0;
+
 
 
 // link
+
 let link=
 "https://www.blibli.com/flashsale";
 
-const parentA=
+const a=
 card.closest("a");
 
 if(
-parentA &&
-parentA.href
+a &&
+a.href
 ){
 
-link=
-parentA.href;
+link=a.href;
 
 }
 
 
-// nama (kalau ada)
+
+// nama
+
 let name=
 card.innerText
 .split("\n")
@@ -149,14 +228,21 @@ x &&
 !x.includes("Rp") &&
 !x.includes("%") &&
 !x.includes("Beli sekarang")
+
 );
 
-if(!name){
+if(
+!name
+){
 
-name="Produk Flash Sale";
+name=
+"Produk Flash Sale";
 
 }
 
+
+
+// hanya diskon >=70%
 
 if(
 
@@ -180,13 +266,17 @@ link
 
 });
 
+
 return result;
 
 });
 
+
+
 console.log(
 "\n=== DISKON >=70% ==="
 );
+
 
 if(
 products.length===0
@@ -198,32 +288,41 @@ console.log(
 
 }else{
 
+
 for(
 const p of products
 ){
 
 const key=
+
 p.price+
 p.discount+
 p.link;
 
+
 if(
-sentProducts.has(key)
+sentProducts.has(
+key
+)
 ){
 
 continue;
 
 }
 
+
 sentProducts.add(
 key
 );
+
 
 console.log(
 p
 );
 
+
 const message=
+
 `🔥 FLASH SALE BLIBLI 🔥
 
 ${p.name}
@@ -234,13 +333,16 @@ ${p.name}
 
 🔗 ${p.link}`;
 
+
 await sendTelegram(
 message
 );
 
 }
 
+
 }
+
 
 await browser.close();
 
@@ -251,11 +353,17 @@ console.log(
 err.message
 );
 
+if(browser){
+
 await browser.close();
 
 }
 
 }
+
+}
+
+
 
 (async()=>{
 
@@ -268,10 +376,12 @@ console.log(
 );
 
 await new Promise(
+
 r=>setTimeout(
 r,
-60000
+300000
 )
+
 );
 
 }

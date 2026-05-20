@@ -2,25 +2,32 @@ const { chromium } = require("playwright");
 
 (async () => {
   const browser = await chromium.launch({
-    headless: true
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage"
+    ]
   });
 
   const page = await browser.newPage();
 
   await page.goto("https://www.blibli.com", {
-    waitUntil: "networkidle"
+    waitUntil: "domcontentloaded",
+    timeout: 60000
   });
 
-  console.log("Title:", await page.title());
+  console.log(
+    "Title:",
+    await page.title()
+  );
 
-  await page.setViewportSize({
-    width: 1280,
-    height: 720
-  });
-  
-  await page.screenshot({
-    path: "debug.png"
-  });
+  // ambil sedikit teks dari halaman
+  const text = await page.locator("body").innerText();
+
+  console.log(
+    text.slice(0, 500)
+  );
 
   await browser.close();
 

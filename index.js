@@ -36,8 +36,8 @@ args:[
 "--disable-dev-shm-usage",
 "--disable-gpu",
 "--disable-web-security",
-"--disable-features=IsolateOrigins,site-per-process",
-"--blink-settings=imagesEnabled=false"
+"--disable-features=site-per-process",
+"--font-render-hinting=none"
 
 ]
 
@@ -54,28 +54,28 @@ height:720
 });
 
 /*
-MATIKAN SEMUA ASSET BERAT
+BLOCK SEMUA YANG BERAT
 */
 
-await page.route("**/*",route=>{
+await page.route("**/*",async route=>{
 
-const type=
+const type =
 route.request().resourceType();
 
 if(
 
-type==="image"||
-type==="font"||
-type==="media"||
+type==="font" ||
+type==="image" ||
+type==="media" ||
 type==="stylesheet"
 
 ){
 
-route.abort();
+await route.abort();
 
 }else{
 
-route.continue();
+await route.continue();
 
 }
 
@@ -97,19 +97,63 @@ console.log(
 "Halaman terbuka"
 );
 
+/*
+STOP LOAD TOTAL
+supaya chromium berhenti render
+*/
+
+await page.evaluate(()=>{
+
+window.stop();
+
+});
+
+/*
+hapus semua style
+*/
+
+await page.evaluate(()=>{
+
+const styles =
+document.querySelectorAll(
+'style,link[rel="stylesheet"]'
+);
+
+styles.forEach(
+x=>x.remove()
+);
+
+});
+
+/*
+jangan tunggu lama
+*/
+
 await page.waitForTimeout(
-5000
+2000
 );
 
 console.log(
 "Screenshot..."
 );
 
+/*
+PAKSA SCREENSHOT CEPAT
+*/
+
 await page.screenshot({
 
 path:"blibli.png",
 
-timeout:10000
+type:"png",
+
+animations:"disabled",
+
+caret:"hide",
+
+scale:"css",
+
+timeout:5000
 
 });
 
@@ -127,7 +171,7 @@ fs.createReadStream(
 
 {
 caption:
-"🔥 BLIBLI LIGHT MODE"
+"🔥 BLIBLI"
 }
 
 );

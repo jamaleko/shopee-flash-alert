@@ -1,8 +1,0 @@
-services:
-  - type: worker
-    name: blibli-test
-    env: node
-    buildCommand: |
-      npm install
-      npx playwright install chromium
-    startCommand: npm start

@@ -3,13 +3,21 @@ const TelegramBot = require("node-telegram-bot-api");
 
 const bot = new TelegramBot(
 process.env.BOT_TOKEN,
-{polling:false}
+{
+polling:false
+}
 );
 
 const chatId=process.env.CHAT_ID;
 
 async function sleep(ms){
-return new Promise(resolve=>setTimeout(resolve,ms));
+
+return new Promise(resolve=>{
+
+setTimeout(resolve,ms);
+
+});
+
 }
 
 async function checkFlashsale(){
@@ -53,7 +61,9 @@ timeout:60000
 }
 );
 
-await page.waitForTimeout(15000);
+await page.waitForTimeout(
+15000
+);
 
 console.log(
 "Title:",
@@ -64,13 +74,15 @@ const products=await page.evaluate(()=>{
 
 const hasil=[];
 
-const cards=document.querySelectorAll(
+const cards=
+document.querySelectorAll(
 'a[href*="/p/"]'
 );
 
 cards.forEach(card=>{
 
-const text=card.innerText?.trim();
+const text=
+card.innerText?.trim();
 
 if(!text) return;
 
@@ -80,60 +92,110 @@ text.includes("Akan hadir")
 text.includes("Besok")
 ||
 text.includes("Peringat")
-){
-return;
-}
-
-if(
+||
 text.includes("Rp??")
 ){
 return;
 }
 
+const harga=
+text.match(
+/Rp[\d\.]+/
+)?.[0];
+
+if(!harga) return;
+
+const diskon=
+parseInt(
+text.match(
+/(\d+)%/
+)?.[1] || "0"
+);
+
 if(
-!text.match(/Rp[\d\.]+/)
+diskon<70
 ){
 return;
 }
 
-hasil.push(
-text
-.replace(/\n/g," | ")
-.replace(/\s+/g," ")
-);
+let link=
+card.href;
+
+if(
+link &&
+!link.startsWith(
+"http"
+)
+){
+
+link=
+"https://www.blibli.com"+
+link;
+
+}
+
+hasil.push({
+
+harga,
+diskon,
+link
 
 });
 
-return [...new Set(hasil)]
-.slice(0,10);
+});
+
+return hasil.slice(
+0,
+10
+);
 
 });
 
 console.log("");
-console.log("=== DISKON GILA ===");
+console.log(
+"=== DISKON ≥70% ==="
+);
 
-if(products.length===0){
+if(
+products.length===0
+){
 
 console.log(
-"Tidak ada produk ditemukan"
+"Tidak ada diskon >=70%"
 );
 
 }else{
 
+let pesan=
+"🔥 FLASH SALE BLIBLI 🔥\n\n";
+
 products.forEach(item=>{
 
-console.log("----------------");
-console.log(item);
+console.log(
+"----------------"
+);
+
+console.log(
+"Harga:",
+item.harga
+);
+
+console.log(
+"Diskon:",
+item.diskon+"%"
+);
+
+console.log(
+"Link:",
+item.link
+);
+
+pesan+=
+`💰 ${item.harga}\n`+
+`🔥 Diskon ${item.diskon}%\n`+
+`🔗 ${item.link}\n\n`;
 
 });
-
-}
-
-if(products.length){
-
-const pesan=
-"🔥 FLASH SALE BLIBLI 🔥\n\n"+
-products.join("\n\n");
 
 await bot.sendMessage(
 chatId,
@@ -172,11 +234,11 @@ while(true){
 await checkFlashsale();
 
 console.log(
-"Sleep 60 detik..."
+"Sleep..."
 );
 
 await sleep(
-60000
+300000
 );
 
 }

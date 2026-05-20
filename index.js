@@ -53,6 +53,53 @@ console.log(
 "Buka flashsale..."
 );
 
+const apiData=[];
+
+/*
+tangkap response API
+*/
+
+page.on(
+"response",
+async(response)=>{
+
+try{
+
+const url=
+response.url();
+
+if(
+
+url.includes("flash")||
+url.includes("product")||
+url.includes("promo")
+
+){
+
+const contentType=
+response.headers()["content-type"];
+
+if(
+contentType &&
+contentType.includes(
+"application/json"
+)
+){
+
+const data=
+await response.json();
+
+apiData.push(data);
+
+}
+
+}
+
+}catch(e){}
+
+}
+);
+
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
@@ -66,223 +113,166 @@ console.log(
 );
 
 await page.waitForTimeout(
-15000
+20000
 );
+
+/*
+paksa load
+*/
+
+for(
+let i=0;
+i<10;
+i++
+){
+
+await page.mouse.wheel(
+0,
+2500
+);
+
+await page.waitForTimeout(
+2000
+);
+
+}
 
 console.log(
 "Title:",
 await page.title()
 );
 
-/*
-scroll pelan
-*/
-
-for(let i=0;i<10;i++){
-
-await page.mouse.wheel(
-0,
-1000
+console.log(
+"API ditemukan:",
+apiData.length
 );
 
-await page.waitForTimeout(
-3000
+const products=[];
+
+/*
+rekursif cari data produk
+*/
+
+function cariProduk(obj){
+
+if(!obj) return;
+
+if(
+Array.isArray(obj)
+){
+
+obj.forEach(
+x=>cariProduk(x)
 );
 
-}
-
-const products=
-await page.evaluate(()=>{
-
-const hasil=[];
-
-/*
-ambil semua card yang terlihat
-*/
-
-const semua=
-[
-...document.querySelectorAll(
-"div"
-)
-];
-
-semua.forEach(card=>{
-
-const txt=
-card.innerText?.trim();
-
-if(!txt) return;
-
-/*
-harus ada harga
-*/
-
-if(
-!txt.match(/Rp[\d\.]+/)
-){
 return;
-}
-
-/*
-buang menu
-*/
-
-if(
-
-txt.includes("Masuk")||
-txt.includes("Daftar")||
-txt.includes("Kategori")||
-txt.includes("Berlangsung")||
-txt.includes("Besok")||
-txt.includes("Peringat")||
-txt.includes("Akan hadir")||
-txt.includes("Filter")
-
-){
-return;
-}
-
-const lines=
-txt
-.split("\n")
-.map(
-x=>x.trim()
-)
-.filter(Boolean);
-
-let nama="";
-let harga="";
-
-for(
-const line of lines
-){
-
-if(
-
-!nama&&
-!line.includes("Rp")&&
-line.length>8&&
-!line.includes("Cepat habis")&&
-!line.includes("Beli sekarang")
-
-){
-
-nama=line;
-
-}
-
-const m=
-line.match(
-/Rp[\d\.]+/
-);
-
-if(
-m&&!harga
-){
-
-harga=m[0];
-
-}
 
 }
 
 if(
-!nama||
-!harga
+typeof obj==="object"
 ){
-return;
-}
 
-/*
-cari link parent
-*/
+const nama=
 
-let parent=
-card;
+obj.name||
+obj.title||
+obj.productName||
+obj.productTitle||
+"";
 
-let link="";
+const harga=
 
-for(
-let i=0;
-i<15;
-i++
-){
+obj.price?.toString()||
+obj.salePrice?.toString()||
+obj.finalPrice?.toString()||
+"";
+
+const link=
+
+obj.url||
+obj.productUrl||
+obj.seoUrl||
+"";
 
 if(
-!parent
-) break;
-
-const a=
-parent.querySelector(
-"a[href]"
-);
-
-if(
-a&&a.href
+nama &&
+harga
 ){
 
-link=
-a.href
-.split("?")[0];
-
-break;
-
-}
-
-parent=
-parent.parentElement;
-
-}
-
-if(
-!link
-){
-return;
-}
-
-hasil.push({
+products.push({
 
 nama,
-harga,
+
+harga:
+harga.includes("Rp")
+?
+harga
+:
+`Rp${harga}`,
+
+link:
+link.startsWith("http")
+?
 link
+:
+`https://www.blibli.com${link}`
 
 });
 
-});
+}
 
-return [
+for(
+const key in obj
+){
 
-...new Map(
+cariProduk(
+obj[key]
+);
 
-hasil.map(
+}
+
+}
+
+}
+
+apiData.forEach(
+x=>cariProduk(x)
+);
+
+/*
+hapus duplikat
+*/
+
+const finalProducts=
+
+[...new Map(
+
+products.map(
 x=>[
 x.link,
 x
 ]
 )
 
-).values()
+).values()]
 
-]
+.slice(
+0,
+10
+);
 
-.slice(0,10);
-
-});
-
-console.log("");
+console.log(
+"Jumlah produk:",
+finalProducts.length
+);
 
 console.log(
 "=== FLASH SALE ==="
 );
 
-console.log(
-"Jumlah produk:",
-products.length
-);
-
 if(
-products.length===0
+finalProducts.length===0
 ){
 
 console.log(
@@ -296,7 +286,7 @@ return;
 let pesan=
 "🔥 FLASH SALE BLIBLI 🔥\n\n";
 
-products.forEach(item=>{
+finalProducts.forEach(item=>{
 
 console.log(
 item.nama
@@ -311,7 +301,7 @@ item.link
 );
 
 console.log(
-"-------------"
+"----------------"
 );
 
 pesan+=
@@ -344,9 +334,7 @@ err.message
 
 }finally{
 
-if(
-browser
-){
+if(browser){
 
 await browser.close();
 

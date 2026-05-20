@@ -13,9 +13,13 @@ const { chromium } = require("playwright");
 
   console.log("Title:", await page.title());
 
+  await page.setViewportSize({
+    width: 1280,
+    height: 720
+  });
+  
   await page.screenshot({
-    path: "debug.png",
-    fullPage: true
+    path: "debug.png"
   });
 
   await browser.close();

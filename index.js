@@ -60,7 +60,14 @@ console.log(
 await page.title()
 );
 
-await page.mouse.wheel(0,1200);
+/*
+scroll supaya produk muncul
+*/
+
+await page.mouse.wheel(
+0,
+1500
+);
 
 await page.waitForTimeout(
 5000
@@ -70,57 +77,121 @@ const products=await page.evaluate(()=>{
 
 const hasil=[];
 
-const links=document.querySelectorAll(
-'a[href]'
-);
+const cards=[
+...document.querySelectorAll("a")
+];
 
-links.forEach(item=>{
+cards.forEach(card=>{
 
-const text=item.innerText?.trim();
+const text=
+card.innerText?.trim();
 
 if(!text) return;
 
+/*
+buang menu/header
+*/
+
 if(
-text.includes("Akan hadir")||
-text.includes("Besok")||
+
+text.includes("Masuk")||
+text.includes("Daftar")||
+text.includes("Kategori")||
 text.includes("Peringat")||
-text.includes("Rp??")
+text.includes("Berlangsung")||
+text.includes("Besok")||
+text.includes("Akan hadir")
+
 ){
 return;
 }
 
-const harga=text.match(
-/Rp[\d\.]+/g
+/*
+harus ada harga
+*/
+
+const harga=
+text.match(
+/Rp[\d\.]+/
 );
 
 if(!harga) return;
 
-const link=item.href;
+const link=
+card.href;
 
 if(
-!link.includes("/p/")
+!link ||
+!link.startsWith("http")
 ){
 return;
 }
 
+/*
+pecah text
+*/
+
+const lines=text
+.split("\n")
+.map(x=>x.trim())
+.filter(Boolean);
+
+let nama="Produk";
+
+for(let i=0;i<lines.length;i++){
+
+const baris=
+lines[i];
+
+/*
+nama produk:
+bukan harga
+minimal panjang
+*/
+
+if(
+
+!baris.includes("Rp")&&
+baris.length>10
+
+){
+
+nama=baris;
+
+break;
+
+}
+
+}
+
 hasil.push({
+
+nama:nama,
 
 harga:harga[0],
 
-link:link.split("?")[0]
+link:
+link.split("?")[0]
 
 });
 
 });
+
+/*
+hapus duplikat
+*/
 
 return [...new Map(
+
 hasil.map(
 item=>[
 item.link,
 item
 ]
 )
+
 ).values()]
+
 .slice(0,10);
 
 });
@@ -141,10 +212,17 @@ console.log(
 products.forEach(item=>{
 
 console.log(
+"Nama:",
+item.nama
+);
+
+console.log(
+"Harga:",
 item.harga
 );
 
 console.log(
+"Link:",
 item.link
 );
 
@@ -160,7 +238,14 @@ let pesan=
 products.forEach(item=>{
 
 pesan+=
-`${item.harga}\n${item.link}\n\n`;
+
+`📦 ${item.nama}
+
+💰 ${item.harga}
+
+🔗 ${item.link}
+
+`;
 
 });
 
@@ -201,7 +286,7 @@ while(true){
 await checkFlashsale();
 
 console.log(
-"Sleep..."
+"Sleep 5 menit..."
 );
 
 await sleep(

@@ -30,11 +30,15 @@ await chromium.launch({
 headless:true,
 
 args:[
+
 "--no-sandbox",
 "--disable-setuid-sandbox",
 "--disable-dev-shm-usage",
 "--disable-gpu",
-"--single-process"
+"--disable-web-security",
+"--disable-features=IsolateOrigins,site-per-process",
+"--blink-settings=imagesEnabled=false"
+
 ]
 
 });
@@ -45,6 +49,34 @@ await browser.newPage({
 viewport:{
 width:1280,
 height:720
+}
+
+});
+
+/*
+MATIKAN SEMUA ASSET BERAT
+*/
+
+await page.route("**/*",route=>{
+
+const type=
+route.request().resourceType();
+
+if(
+
+type==="image"||
+type==="font"||
+type==="media"||
+type==="stylesheet"
+
+){
+
+route.abort();
+
+}else{
+
+route.continue();
+
 }
 
 });
@@ -70,24 +102,14 @@ await page.waitForTimeout(
 );
 
 console.log(
-"Ambil screenshot ringan..."
+"Screenshot..."
 );
-
-/*
-SUPER RINGAN
-hanya area kecil
-*/
 
 await page.screenshot({
 
 path:"blibli.png",
 
-clip:{
-x:0,
-y:0,
-width:1280,
-height:720
-}
+timeout:10000
 
 });
 
@@ -105,7 +127,7 @@ fs.createReadStream(
 
 {
 caption:
-"🔥 BLIBLI"
+"🔥 BLIBLI LIGHT MODE"
 }
 
 );

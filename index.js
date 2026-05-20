@@ -6,40 +6,32 @@ process.env.BOT_TOKEN,
 { polling:false }
 );
 
-const chatId =
-process.env.CHAT_ID;
+const chatId=process.env.CHAT_ID;
 
 async function sleep(ms){
-
-return new Promise(
-r=>setTimeout(r,ms)
-);
-
+return new Promise(resolve=>setTimeout(resolve,ms));
 }
 
-async function run(){
+async function checkFlashsale(){
 
 let browser;
 
 try{
 
-browser=
-await chromium.launch({
+browser=await chromium.launch({
 
 headless:true,
 
 args:[
-
 "--no-sandbox",
 "--disable-setuid-sandbox",
-"--disable-dev-shm-usage"
-
+"--disable-dev-shm-usage",
+"--disable-blink-features=AutomationControlled"
 ]
 
 });
 
-const context=
-await browser.newContext({
+const page=await browser.newPage({
 
 viewport:{
 width:1366,
@@ -51,156 +43,126 @@ userAgent:
 
 });
 
-const page=
-await context.newPage();
-
-let products=[];
-
-/*
-tangkap response API
-dari browser asli
-*/
-
-page.on(
-"response",
-async(response)=>{
-
-try{
-
-const url=
-response.url();
-
-if(
-
-url.includes("flashsale") ||
-url.includes("product") ||
-url.includes("search")
-
-){
-
-console.log(
-"API:",
-url
-);
-
-const json=
-await response.json()
-.catch(()=>null);
-
-if(!json) return;
-
-const text=
-JSON.stringify(json);
-
-const harga=
-text.match(
-/Rp[\d\.]+/g
-);
-
-if(
-harga
-){
-
-products.push({
-
-nama:
-url.slice(
-0,
-80
-),
-
-harga:
-harga[0],
-
-link:url
-
-});
-
-}
-
-}
-
-}catch(e){}
-
-}
-);
-
-console.log(
-"Buka blibli..."
-);
+console.log("Buka flashsale...");
 
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
 waitUntil:"domcontentloaded",
-timeout:90000
+timeout:60000
 }
 );
 
+await page.waitForTimeout(15000);
+
 console.log(
-"Halaman terbuka"
+"Title:",
+await page.title()
 );
+
+await page.mouse.wheel(0,1200);
 
 await page.waitForTimeout(
-20000
+5000
 );
 
-console.log(
-"Jumlah produk:",
-products.length
+const products=await page.evaluate(()=>{
+
+const hasil=[];
+
+const links=document.querySelectorAll(
+'a[href]'
 );
 
-products=[
+links.forEach(item=>{
 
-...new Map(
+const text=item.innerText?.trim();
 
-products.map(
-x=>[
-x.link,
-x
+if(!text) return;
+
+if(
+text.includes("Akan hadir")||
+text.includes("Besok")||
+text.includes("Peringat")||
+text.includes("Rp??")
+){
+return;
+}
+
+const harga=text.match(
+/Rp[\d\.]+/g
+);
+
+if(!harga) return;
+
+const link=item.href;
+
+if(
+!link.includes("/p/")
+){
+return;
+}
+
+hasil.push({
+
+harga:harga[0],
+
+link:link.split("?")[0]
+
+});
+
+});
+
+return [...new Map(
+hasil.map(
+item=>[
+item.link,
+item
 ]
 )
-
-).values()
-
-]
-
+).values()]
 .slice(0,10);
 
+});
+
+console.log("");
 console.log(
 "=== FLASH SALE ==="
 );
 
-if(
-products.length===0
-){
+if(products.length===0){
 
 console.log(
 "Tidak ada produk ditemukan"
 );
 
-return;
+}else{
 
-}
-
-let pesan=
-"🔥 FLASH SALE BLIBLI 🔥\n\n";
-
-for(const item of products){
+products.forEach(item=>{
 
 console.log(
 item.harga
 );
 
+console.log(
+item.link
+);
+
+console.log(
+"---------------"
+);
+
+});
+
+let pesan=
+"🔥 FLASH SALE BLIBLI 🔥\n\n";
+
+products.forEach(item=>{
+
 pesan+=
+`${item.harga}\n${item.link}\n\n`;
 
-`💰 ${item.harga}
-
-🔗 ${item.link}
-
-`;
-
-}
+});
 
 await bot.sendMessage(
 chatId,
@@ -211,14 +173,16 @@ console.log(
 "Telegram terkirim"
 );
 
+}
+
+await browser.close();
+
 }catch(err){
 
 console.log(
 "ERROR:",
 err.message
 );
-
-}finally{
 
 if(browser){
 
@@ -234,10 +198,10 @@ await browser.close();
 
 while(true){
 
-await run();
+await checkFlashsale();
 
 console.log(
-"Sleep 5 menit..."
+"Sleep..."
 );
 
 await sleep(

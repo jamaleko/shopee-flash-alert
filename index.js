@@ -44,24 +44,43 @@ const text=el.innerText?.trim();
 
 if(!text) return;
 
-const adaHarga=text.match(/Rp[\d\.]+/);
-const adaDiskon=text.match(/\d+%/);
+const lines=text
+.split("\n")
+.map(x=>x.trim())
+.filter(x=>x);
+
+const adaHarga=
+lines.some(
+x=>/Rp[\d\.]+/.test(x)
+);
+
+if(!adaHarga) return;
+
+const gabung=lines.join(" | ");
 
 if(
-adaHarga ||
-adaDiskon
+gabung.includes("Masuk") ||
+gabung.includes("Daftar") ||
+gabung.includes("BlibliCare") ||
+gabung.includes("liveChat") ||
+gabung.includes("original")
 ){
-
-hasil.push({
-text:text
-});
-
+return;
 }
 
+hasil.push(gabung);
+
 });
 
-return hasil;
+return [...new Set(hasil)].slice(0,30);
 
+});
+
+console.log("=== DISKON GILA ===");
+
+products.forEach(item=>{
+console.log("----------------");
+console.log(item);
 });
 
 console.log("=== DISKON GILA ===");
@@ -90,7 +109,6 @@ console.log("----------------");
 console.log(txt);
 
 }
-
 }catch(err){
 
 console.log(

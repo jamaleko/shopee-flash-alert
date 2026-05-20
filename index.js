@@ -71,50 +71,54 @@ await page.title()
 );
 
 /*
-scroll supaya card muncul
+paksa render produk
 */
 
-for(let i=0;i<8;i++){
+for(let i=0;i<10;i++){
 
 await page.mouse.wheel(
 0,
-2000
+2500
 );
 
 await page.waitForTimeout(
-3000
+2000
 );
 
 }
-
-/*
-ambil produk
-*/
 
 const products=
 await page.evaluate(()=>{
 
 const hasil=[];
 
-const cards=[
+/*
+ambil semua elemen halaman
+*/
 
-...document.querySelectorAll(
-'a[href*="/p/"]'
-)
+const semua=[
+
+...document.querySelectorAll("*")
 
 ];
 
-console.log(
-"Jumlah card:",
-cards.length
+semua.forEach(el=>{
+
+const txt=
+el.innerText?.trim();
+
+if(!txt) return;
+
+/*
+harus ada harga
+*/
+
+const hargaMatch=
+txt.match(
+/Rp[\d\.]+/
 );
 
-cards.forEach(card=>{
-
-const text=
-card.innerText?.trim();
-
-if(!text) return;
+if(!hargaMatch) return;
 
 /*
 buang sampah
@@ -122,19 +126,21 @@ buang sampah
 
 if(
 
-text.includes("Masuk")||
-text.includes("Daftar")||
-text.includes("Kategori")||
-text.includes("Berlangsung")||
-text.includes("Besok")||
-text.includes("Peringat")||
-text.includes("Akan hadir")
+txt.includes("Masuk")||
+txt.includes("Daftar")||
+txt.includes("Kategori")||
+txt.includes("Berlangsung")||
+txt.includes("Besok")||
+txt.includes("Peringat")||
+txt.includes("Akan hadir")||
+txt.includes("Filter")
 
 ){
 return;
 }
 
-const lines=text
+const lines=
+txt
 .split("\n")
 .map(
 x=>x.trim()
@@ -142,30 +148,11 @@ x=>x.trim()
 .filter(Boolean);
 
 let nama="";
-let harga="";
+let harga=
+hargaMatch[0];
 
 /*
-ambil harga
-*/
-
-for(const line of lines){
-
-const m=
-line.match(
-/Rp[\d\.]+/
-);
-
-if(m){
-
-harga=m[0];
-break;
-
-}
-
-}
-
-/*
-ambil nama
+ambil nama produk
 */
 
 for(const line of lines){
@@ -173,7 +160,7 @@ for(const line of lines){
 if(
 
 !line.includes("Rp")&&
-line.length>10&&
+line.length>8&&
 !line.includes("Beli sekarang")&&
 !line.includes("Cepat habis")
 
@@ -186,25 +173,52 @@ break;
 
 }
 
+if(!nama) return;
+
+/*
+naik parent cari link
+*/
+
+let parent=el;
+let link="";
+
+for(let i=0;i<10;i++){
+
+if(!parent) break;
+
 if(
-!nama||
-!harga
+parent.tagName==="A" &&
+parent.href
 ){
-return;
+
+link=
+parent.href
+.split("?")[0];
+
+break;
+
 }
+
+parent=
+parent.parentElement;
+
+}
+
+if(!link) return;
 
 hasil.push({
 
 nama,
 harga,
-
-link:
-card.href
-.split("?")[0]
+link
 
 });
 
 });
+
+/*
+hapus duplikat
+*/
 
 return [
 
@@ -244,7 +258,9 @@ console.log(
 "Tidak ada produk ditemukan"
 );
 
-}else{
+return;
+
+}
 
 let pesan=
 "🔥 FLASH SALE BLIBLI 🔥\n\n";
@@ -290,8 +306,6 @@ pesan
 console.log(
 "Telegram terkirim"
 );
-
-}
 
 }catch(err){
 

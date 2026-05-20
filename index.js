@@ -1,10 +1,11 @@
-const { chromium } = require("playwright-extra");
+const { chromium } =
+require("playwright-extra");
 
-const stealth =
-require("puppeteer-extra-plugin-stealth")();
+const StealthPlugin =
+require("puppeteer-extra-plugin-stealth");
 
 chromium.use(
-stealth
+StealthPlugin()
 );
 
 const TelegramBot =

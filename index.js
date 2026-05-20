@@ -1,17 +1,20 @@
 const { chromium } = require("playwright");
 const TelegramBot = require("node-telegram-bot-api");
 
-const bot = new TelegramBot(
+const bot=new TelegramBot(
 process.env.BOT_TOKEN,
-{ polling:false }
+{polling:false}
 );
 
-const chatId=process.env.CHAT_ID;
+const chatId=
+process.env.CHAT_ID;
 
 async function sleep(ms){
+
 return new Promise(
-resolve=>setTimeout(resolve,ms)
+r=>setTimeout(r,ms)
 );
+
 }
 
 async function checkFlashsale(){
@@ -20,20 +23,21 @@ let browser=null;
 
 try{
 
-browser=await chromium.launch({
+browser=
+await chromium.launch({
 
 headless:true,
 
 args:[
 "--no-sandbox",
 "--disable-setuid-sandbox",
-"--disable-dev-shm-usage",
-"--disable-blink-features=AutomationControlled"
+"--disable-dev-shm-usage"
 ]
 
 });
 
-const page=await browser.newPage({
+const page=
+await browser.newPage({
 
 viewport:{
 width:1366,
@@ -41,7 +45,7 @@ height:768
 },
 
 userAgent:
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36"
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
 });
 
@@ -71,18 +75,18 @@ await page.title()
 );
 
 /*
-paksa render produk
+scroll pelan
 */
 
 for(let i=0;i<10;i++){
 
 await page.mouse.wheel(
 0,
-2500
+1000
 );
 
 await page.waitForTimeout(
-2000
+3000
 );
 
 }
@@ -93,19 +97,20 @@ await page.evaluate(()=>{
 const hasil=[];
 
 /*
-ambil semua elemen halaman
+ambil semua card yang terlihat
 */
 
-const semua=[
-
-...document.querySelectorAll("*")
-
+const semua=
+[
+...document.querySelectorAll(
+"div"
+)
 ];
 
-semua.forEach(el=>{
+semua.forEach(card=>{
 
 const txt=
-el.innerText?.trim();
+card.innerText?.trim();
 
 if(!txt) return;
 
@@ -113,15 +118,14 @@ if(!txt) return;
 harus ada harga
 */
 
-const hargaMatch=
-txt.match(
-/Rp[\d\.]+/
-);
-
-if(!hargaMatch) return;
+if(
+!txt.match(/Rp[\d\.]+/)
+){
+return;
+}
 
 /*
-buang sampah
+buang menu
 */
 
 if(
@@ -148,51 +152,78 @@ x=>x.trim()
 .filter(Boolean);
 
 let nama="";
-let harga=
-hargaMatch[0];
+let harga="";
 
-/*
-ambil nama produk
-*/
-
-for(const line of lines){
+for(
+const line of lines
+){
 
 if(
 
+!nama&&
 !line.includes("Rp")&&
 line.length>8&&
-!line.includes("Beli sekarang")&&
-!line.includes("Cepat habis")
+!line.includes("Cepat habis")&&
+!line.includes("Beli sekarang")
 
 ){
 
 nama=line;
-break;
 
 }
 
-}
-
-if(!nama) return;
-
-/*
-naik parent cari link
-*/
-
-let parent=el;
-let link="";
-
-for(let i=0;i<10;i++){
-
-if(!parent) break;
+const m=
+line.match(
+/Rp[\d\.]+/
+);
 
 if(
-parent.tagName==="A" &&
-parent.href
+m&&!harga
+){
+
+harga=m[0];
+
+}
+
+}
+
+if(
+!nama||
+!harga
+){
+return;
+}
+
+/*
+cari link parent
+*/
+
+let parent=
+card;
+
+let link="";
+
+for(
+let i=0;
+i<15;
+i++
+){
+
+if(
+!parent
+) break;
+
+const a=
+parent.querySelector(
+"a[href]"
+);
+
+if(
+a&&a.href
 ){
 
 link=
-parent.href
+a.href
 .split("?")[0];
 
 break;
@@ -204,7 +235,11 @@ parent.parentElement;
 
 }
 
-if(!link) return;
+if(
+!link
+){
+return;
+}
 
 hasil.push({
 
@@ -215,10 +250,6 @@ link
 });
 
 });
-
-/*
-hapus duplikat
-*/
 
 return [
 
@@ -268,22 +299,19 @@ let pesan=
 products.forEach(item=>{
 
 console.log(
-"Nama:",
 item.nama
 );
 
 console.log(
-"Harga:",
 item.harga
 );
 
 console.log(
-"Link:",
 item.link
 );
 
 console.log(
-"----------------"
+"-------------"
 );
 
 pesan+=
@@ -316,7 +344,9 @@ err.message
 
 }finally{
 
-if(browser){
+if(
+browser
+){
 
 await browser.close();
 

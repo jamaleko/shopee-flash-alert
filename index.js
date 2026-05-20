@@ -1,6 +1,5 @@
 const { chromium } = require("playwright");
 const TelegramBot = require("node-telegram-bot-api");
-const fs = require("fs");
 
 const bot = new TelegramBot(
 process.env.BOT_TOKEN,
@@ -34,10 +33,7 @@ args:[
 "--no-sandbox",
 "--disable-setuid-sandbox",
 "--disable-dev-shm-usage",
-"--disable-gpu",
-"--disable-web-security",
-"--disable-features=site-per-process",
-"--font-render-hinting=none"
+"--disable-gpu"
 
 ]
 
@@ -49,33 +45,139 @@ await browser.newPage({
 viewport:{
 width:1280,
 height:720
-}
+},
+
+userAgent:
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36"
 
 });
 
 /*
-BLOCK SEMUA YANG BERAT
+SIMPAN HASIL API
 */
 
-await page.route("**/*",async route=>{
+let apiProducts=[];
 
-const type =
-route.request().resourceType();
+/*
+TANGKAP RESPONSE API
+*/
+
+page.on(
+"response",
+async(response)=>{
+
+try{
+
+const url=
+response.url();
 
 if(
 
-type==="font" ||
-type==="image" ||
-type==="media" ||
-type==="stylesheet"
+url.includes("flashsale") ||
+url.includes("product") ||
+url.includes("search")
 
 ){
 
-await route.abort();
+const headers=
+response.headers();
 
-}else{
+const contentType=
+headers["content-type"] || "";
 
-await route.continue();
+if(
+contentType.includes("application/json")
+){
+
+const json=
+await response.json();
+
+/*
+cari array product
+*/
+
+const text=
+JSON.stringify(json);
+
+/*
+ambil semua nama + harga dari json
+*/
+
+const namaRegex=
+/"name":"(.*?)"/g;
+
+const hargaRegex=
+/"price":"?(.*?)"?[,}]/g;
+
+let names=[];
+let prices=[];
+
+let m;
+
+/*
+nama
+*/
+
+while(
+(m=namaRegex.exec(text)) !== null
+){
+
+names.push(
+m[1]
+);
+
+}
+
+/*
+harga
+*/
+
+while(
+(m=hargaRegex.exec(text)) !== null
+){
+
+prices.push(
+m[1]
+);
+
+}
+
+/*
+gabung
+*/
+
+for(let i=0;i<names.length;i++){
+
+const nama=
+names[i];
+
+const harga=
+prices[i] || "-";
+
+if(
+
+nama &&
+nama.length > 5
+
+){
+
+apiProducts.push({
+
+nama,
+
+harga
+
+});
+
+}
+
+}
+
+}
+
+}
+
+}catch(e){
 
 }
 
@@ -86,7 +188,7 @@ console.log(
 );
 
 await page.goto(
-"https://shopee.co.id/flash_sale",
+"https://www.blibli.com/flashsale",
 {
 waitUntil:"domcontentloaded",
 timeout:120000
@@ -98,87 +200,93 @@ console.log(
 );
 
 /*
-STOP LOAD TOTAL
-supaya chromium berhenti render
-*/
-
-await page.evaluate(()=>{
-
-window.stop();
-
-});
-
-/*
-hapus semua style
-*/
-
-await page.evaluate(()=>{
-
-const styles =
-document.querySelectorAll(
-'style,link[rel="stylesheet"]'
-);
-
-styles.forEach(
-x=>x.remove()
-);
-
-});
-
-/*
-jangan tunggu lama
+biarkan API jalan
 */
 
 await page.waitForTimeout(
-2000
-);
-
-console.log(
-"Screenshot..."
+15000
 );
 
 /*
-PAKSA SCREENSHOT CEPAT
+hapus duplikat
 */
 
-await page.screenshot({
+const products=[
 
-path:"blibli.png",
+...new Map(
 
-type:"png",
+apiProducts.map(
+x=>[
+x.nama,
+x
+]
+)
 
-animations:"disabled",
+).values()
 
-caret:"hide",
+]
 
-scale:"css",
+.slice(0,10);
 
-timeout:5000
+console.log("");
+console.log(
+"=== FLASH SALE ==="
+);
+
+console.log(
+"Jumlah produk:",
+products.length
+);
+
+if(
+products.length===0
+){
+
+console.log(
+"Tidak ada produk ditemukan"
+);
+
+}else{
+
+let pesan=
+"🔥 FLASH SALE BLIBLI 🔥\n\n";
+
+products.forEach(item=>{
+
+console.log(
+item.nama
+);
+
+console.log(
+item.harga
+);
+
+console.log(
+"-------------"
+);
+
+pesan +=
+
+`📦 ${item.nama}
+
+💰 ${item.harga}
+
+`;
 
 });
 
-console.log(
-"Screenshot berhasil"
-);
-
-await bot.sendPhoto(
+await bot.sendMessage(
 
 chatId,
-
-fs.createReadStream(
-"./blibli.png"
-),
-
-{
-caption:
-"🔥 BLIBLI"
-}
+pesan
 
 );
 
 console.log(
 "Telegram terkirim"
 );
+
+}
 
 }catch(err){
 

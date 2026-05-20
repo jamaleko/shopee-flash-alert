@@ -124,16 +124,54 @@ timeout:0
 );
 
 
-await page.waitForSelector(
+// tunggu halaman hidup dulu
+await page.waitForTimeout(15000);
 
+// scroll supaya flashsale dirender
+await page.evaluate(async()=>{
+
+window.scrollTo(
+0,
+700
+);
+
+await new Promise(
+r=>setTimeout(r,3000)
+);
+
+window.scrollTo(
+0,
+1400
+);
+
+await new Promise(
+r=>setTimeout(r,3000)
+);
+
+window.scrollTo(
+0,
+2000
+);
+
+});
+
+// tunggu sampai produk muncul
+await page.waitForFunction(()=>{
+
+return document.querySelectorAll(
+".els-fs-compact"
+).length>0;
+
+},{
+timeout:60000
+});
+
+console.log(
+"Produk ditemukan:",
+await page.$$eval(
 ".els-fs-compact",
-
-{
-
-timeout:30000
-
-}
-
+x=>x.length
+)
 );
 
 

@@ -43,7 +43,9 @@ userAgent:
 
 });
 
-console.log("Buka flashsale...");
+console.log(
+"Buka flashsale..."
+);
 
 await page.goto(
 "https://www.blibli.com/flashsale",
@@ -70,7 +72,7 @@ for(let i=0;i<5;i++){
 
 await page.mouse.wheel(
 0,
-2000
+1500
 );
 
 await page.waitForTimeout(
@@ -79,120 +81,66 @@ await page.waitForTimeout(
 
 }
 
-/*
-ambil semua text halaman
-*/
-
-const products=await page.evaluate(()=>{
+const products=
+await page.evaluate(()=>{
 
 const hasil=[];
 
 /*
-ambil elemen yang ada harga
+ambil card produk
 */
 
-const semua=[
-...document.querySelectorAll("*")
+const cards=[
+
+...document.querySelectorAll(
+'[class*="product"]'
+),
+
+...document.querySelectorAll(
+'[class*="Product"]'
+),
+
+...document.querySelectorAll(
+'[class*="card"]'
+)
+
 ];
 
-semua.forEach(el=>{
+cards.forEach(card=>{
 
 const text=
-el.innerText?.trim();
+card.innerText?.trim();
 
 if(!text) return;
 
-/*
-harus ada Rp
-*/
-
-if(
-!text.match(/Rp[\d\.]+/)
-){
-return;
-}
-
-/*
-buang sampah
-*/
-
-if(
-
-text.includes("Masuk")||
-text.includes("Daftar")||
-text.includes("Kategori")||
-text.includes("Berlangsung")||
-text.includes("Besok")||
-text.includes("Peringat")||
-text.includes("Akan hadir")
-
-){
-return;
-}
-
-const lines=text
+const lines=
+text
 .split("\n")
-.map(x=>x.trim())
+.map(
+x=>x.trim()
+)
 .filter(Boolean);
 
-let harga="";
 let nama="";
+let harga="";
+let link="";
+
+/*
+ambil nama
+*/
 
 for(const line of lines){
 
 if(
-!harga &&
-line.match(/Rp[\d\.]+/)
-){
-harga=line.match(
-/Rp[\d\.]+/
-)[0];
-}
 
-if(
-!nama &&
 !line.includes("Rp") &&
-line.length>10
+line.length>10 &&
+!line.includes("Beli sekarang") &&
+!line.includes("Cepat habis")
+
 ){
+
 nama=line;
-}
-
-}
-
-if(
-!harga ||
-!nama
-){
-return;
-}
-
-/*
-cari link terdekat
-*/
-
-let parent=el;
-
-for(let i=0;i<5;i++){
-
-if(
-parent.querySelector &&
-parent.querySelector("a")
-){
-
-const a=
-parent.querySelector("a");
-
-if(
-a.href
-){
-
-hasil.push({
-
-nama:nama,
-harga:harga,
-link:a.href.split("?")[0]
-
-});
 
 break;
 
@@ -200,35 +148,108 @@ break;
 
 }
 
-parent=
-parent.parentElement;
+/*
+ambil harga
+*/
 
-if(!parent) break;
+for(const line of lines){
+
+const hargaMatch=
+line.match(
+/Rp[\d\.]+/
+);
+
+if(
+hargaMatch
+){
+
+harga=
+hargaMatch[0];
+
+break;
 
 }
 
+}
+
+/*
+ambil link
+*/
+
+const a=
+card.querySelector(
+"a"
+);
+
+if(
+a &&
+a.href
+){
+
+link=
+a.href.split("?")[0];
+
+}
+
+if(
+
+!nama ||
+!harga ||
+!link
+
+){
+return;
+}
+
+hasil.push({
+
+nama,
+harga,
+link
+
 });
 
-return [...new Map(
+});
+
+/*
+hapus duplikat
+*/
+
+return [
+
+...new Map(
 
 hasil.map(
-x=>[
-x.link,
-x
+item=>[
+item.link,
+item
 ]
 )
 
-).values()]
+).values()
+
+]
+
 .slice(0,10);
 
 });
 
-console.log("");
+console.log(
+""
+);
+
 console.log(
 "=== FLASH SALE ==="
 );
 
-if(products.length===0){
+console.log(
+"Jumlah produk:",
+products.length
+);
+
+if(
+products.length===0
+){
 
 console.log(
 "Tidak ada produk ditemukan"
@@ -242,14 +263,17 @@ let pesan=
 products.forEach(item=>{
 
 console.log(
+"Nama:",
 item.nama
 );
 
 console.log(
+"Harga:",
 item.harga
 );
 
 console.log(
+"Link:",
 item.link
 );
 
@@ -289,7 +313,9 @@ console.log(
 err.message
 );
 
-if(browser){
+if(
+browser
+){
 
 await browser.close();
 

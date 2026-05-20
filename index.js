@@ -1,12 +1,22 @@
-const { chromium } = require("playwright");
-const TelegramBot = require("node-telegram-bot-api");
+const { chromium } = require("playwright-extra");
 
-const bot = new TelegramBot(
+const stealth =
+require("puppeteer-extra-plugin-stealth")();
+
+chromium.use(
+stealth
+);
+
+const TelegramBot =
+require("node-telegram-bot-api");
+
+const bot =
+new TelegramBot(
 process.env.BOT_TOKEN,
 { polling:false }
 );
 
-const chatId=
+const chatId =
 process.env.CHAT_ID;
 
 async function sleep(ms){
@@ -23,7 +33,7 @@ let browser=null;
 
 try{
 
-browser=
+browser =
 await chromium.launch({
 
 headless:true,
@@ -36,16 +46,20 @@ args:[
 
 });
 
-const page=
+const page =
 await browser.newPage({
 
 viewport:{
 width:1366,
 height:768
-},
+}
 
-userAgent:
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+});
+
+await page.setExtraHTTPHeaders({
+
+"accept-language":
+"id-ID,id;q=0.9"
 
 });
 
@@ -56,7 +70,7 @@ console.log(
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
-waitUntil:"domcontentloaded",
+waitUntil:"networkidle",
 timeout:90000
 }
 );
@@ -70,47 +84,56 @@ await page.waitForTimeout(
 );
 
 /*
-scroll dikit
+scroll kecil
 */
 
 await page.mouse.wheel(
 0,
-1000
+1200
 );
 
 await page.waitForTimeout(
-3000
+5000
+);
+
+console.log(
+"Title:",
+await page.title()
 );
 
 /*
-ambil text langsung dari halaman
-BUKAN a[href]
-karena Blibli virtual render
+cek body
 */
 
-const products=
+const body =
+await page.locator("body")
+.innerText();
+
+console.log(
+"BODY LENGTH:",
+body.length
+);
+
+/*
+ambil semua harga
+*/
+
+const products =
 await page.evaluate(()=>{
 
 const hasil=[];
 
-const semua=
+const semua =
 [
 ...document.querySelectorAll("*")
 ];
 
 semua.forEach(el=>{
 
-const text=
+const text =
 el.innerText?.trim();
 
-if(
-!text
-)
-return;
-
-/*
-harus ada harga
-*/
+if(!text) return;
 
 if(
 !text.match(
@@ -119,75 +142,33 @@ if(
 )
 return;
 
-/*
-buang sampah
-*/
-
 if(
-
-text.includes("Masuk")||
-text.includes("Daftar")||
-text.includes("Kategori")||
-text.includes("Berlangsung")||
-text.includes("Besok")||
-text.includes("Peringat")||
-text.includes("Akan hadir")
-
-){
+text.length > 300
+)
 return;
-}
 
-const lines=
+const harga =
+text.match(
+/Rp[\d\.]+/
+)?.[0];
+
+if(!harga)
+return;
+
+const lines =
 text
 .split("\n")
-.map(
-x=>x.trim()
-)
+.map(x=>x.trim())
 .filter(Boolean);
 
-let harga="";
-let nama="";
+let nama="Produk";
 
-/*
-harga
-*/
-
-for(
-const line of lines
-){
-
-const m=
-line.match(
-/Rp[\d\.]+/
-);
-
-if(
-m
-){
-
-harga=
-m[0];
-
-break;
-
-}
-
-}
-
-/*
-nama
-*/
-
-for(
-const line of lines
-){
+for(const line of lines){
 
 if(
 
-!line.includes("Rp")&&
-line.length>10&&
-!line.includes("Beli sekarang")&&
-!line.includes("Cepat habis")
+!line.includes("Rp") &&
+line.length > 5
 
 ){
 
@@ -198,94 +179,18 @@ break;
 
 }
 
-if(
-!nama||
-!harga
-)
-return;
-
-/*
-cari link parent
-*/
-
-let parent=
-el;
-
-let link="";
-
-for(
-let i=0;
-i<10;
-i++
-){
-
-if(
-!parent
-)
-break;
-
-const a=
-parent.querySelector?.(
-"a[href]"
-);
-
-if(
-a &&
-a.href
-){
-
-link=
-a.href.split("?")[0];
-
-break;
-
-}
-
-parent=
-parent.parentElement;
-
-}
-
 hasil.push({
 
 nama,
-harga,
-link
+harga
 
 });
 
 });
 
-/*
-hapus duplikat
-*/
-
-return [
-...new Map(
-
-hasil.map(
-x=>[
-x.nama,
-x
-]
-)
-
-).values()
-
-]
-
-.slice(
-0,
-10
-);
+return hasil.slice(0,10);
 
 });
-
-console.log("");
-
-console.log(
-"=== FLASH SALE ==="
-);
 
 console.log(
 "Jumlah produk:",
@@ -297,45 +202,25 @@ products.length===0
 ){
 
 console.log(
-"Tidak ada produk ditemukan"
+"Tidak ada produk"
 );
 
 }else{
 
-let pesan=
+let pesan =
 "🔥 FLASH SALE BLIBLI 🔥\n\n";
 
-products.forEach(
-item=>{
+products.forEach(item=>{
 
-console.log(
-item.nama
-);
-
-console.log(
-item.harga
-);
-
-console.log(
-item.link
-);
-
-console.log(
-"-------------"
-);
-
-pesan+=
+pesan +=
 
 `📦 ${item.nama}
 
 💰 ${item.harga}
 
-🔗 ${item.link||"-"}
-
 `;
 
-}
-);
+});
 
 await bot.sendMessage(
 chatId,
@@ -357,9 +242,7 @@ err.message
 
 }finally{
 
-if(
-browser
-){
+if(browser){
 
 await browser.close();
 

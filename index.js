@@ -18,9 +18,9 @@ r=>setTimeout(r,ms)
 
 }
 
-async function screenshotBlibli(){
+async function run(){
 
-let browser=null;
+let browser;
 
 try{
 
@@ -32,7 +32,8 @@ headless:true,
 args:[
 "--no-sandbox",
 "--disable-setuid-sandbox",
-"--disable-dev-shm-usage"
+"--disable-dev-shm-usage",
+"--disable-gpu"
 ]
 
 });
@@ -41,9 +42,12 @@ const page =
 await browser.newPage({
 
 viewport:{
-width:1366,
-height:2200
-}
+width:1280,
+height:720
+},
+
+userAgent:
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36"
 
 });
 
@@ -63,41 +67,33 @@ console.log(
 "Halaman terbuka"
 );
 
-await page.waitForTimeout(
-15000
-);
-
 /*
-scroll sedikit
+jangan lama-lama
 */
 
-await page.mouse.wheel(
-0,
-1500
-);
-
 await page.waitForTimeout(
-5000
+8000
 );
 
 console.log(
 "Ambil screenshot..."
 );
 
+/*
+JANGAN fullPage
+*/
+
 await page.screenshot({
 
 path:"blibli.png",
-fullPage:true
+
+timeout:20000
 
 });
 
 console.log(
 "Screenshot berhasil"
 );
-
-/*
-kirim telegram
-*/
 
 await bot.sendPhoto(
 
@@ -108,10 +104,8 @@ fs.createReadStream(
 ),
 
 {
-
 caption:
-"🔥 Screenshot Blibli Flashsale"
-
+"🔥 BLIBLI FLASHSALE"
 }
 
 );
@@ -143,7 +137,7 @@ await browser.close();
 
 while(true){
 
-await screenshotBlibli();
+await run();
 
 console.log(
 "Sleep 5 menit..."

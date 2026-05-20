@@ -1,8 +1,10 @@
 {
-  "name":"blibli-bot",
-  "version":"1.0.0",
-  "dependencies":{
-    "playwright":"1.60.0",
-    "node-telegram-bot-api":"0.66.0"
-  }
+"name":"blibli-bot",
+"dependencies":{
+"playwright":"latest",
+"node-telegram-bot-api":"latest"
+},
+"scripts":{
+"start":"node index.js"
+}
 }

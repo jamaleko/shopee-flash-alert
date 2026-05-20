@@ -75,204 +75,21 @@ console.log(
 await page.title()
 );
 
-const products=await page.evaluate(()=>{
+const debug = await page.evaluate(()=>{
 
-const hasil=[];
-
-const spans=
-document.querySelectorAll(
-"span"
+const cards=document.querySelectorAll(
+'a[href*="/p/"]'
 );
 
-spans.forEach(span=>{
-
-const text=
-span.innerText?.trim();
-
-if(
-!text
-) return;
-
-
-/*
-harus format 70%
-*/
-
-if(
-!/^\d+%$/.test(
-text
-)
-){
-return;
-}
-
-const diskon=
-parseInt(
-text.replace(
-"%",""
-)
-);
-
-if(
-isNaN(
-diskon
-)
-){
-return;
-}
-
-
-/*
-filter >=70%
-*/
-
-if(
-diskon<70
-){
-return;
-}
-
-
-/*
-naik parent sampai ketemu card
-*/
-
-let parent=
-span.parentElement;
-
-for(
-let i=0;
-i<10;
-i++
-){
-
-if(
-!parent
-) break;
-
-const isi=
-parent.innerText || "";
-
-if(
-isi.includes("Rp")
-){
-
-const harga=
-isi.match(
-/Rp[\d\.]+/
-)?.[0];
-
-if(
-!harga
-) break;
-
-
-/*
-ambil link
-*/
-
-let link="";
-
-const a=
-parent.querySelector(
-"a"
-);
-
-if(
-a
-){
-
-link=
-a.href || "";
-
-if(
-link &&
-!link.startsWith(
-"http"
-)
-){
-
-link=
-"https://www.blibli.com"+
-link;
-
-}
-
-}
-
-hasil.push({
-
-diskon,
-harga,
-link
+return [...cards]
+.slice(0,3)
+.map(x=>x.innerHTML);
 
 });
 
-break;
-
-}
-
-parent=
-parent.parentElement;
-
-}
-
-});
-
-return [
-...new Map(
-hasil.map(
-x=>[
-x.harga,
-x
-]
-)
-).values()
-];
-
-});
-
-console.log("");
 console.log(
-"=== DISKON >=70% ==="
+JSON.stringify(debug,null,2)
 );
-
-if(
-products.length===0
-){
-
-console.log(
-"Tidak ada diskon >=70%"
-);
-
-}else{
-
-let pesan=
-"🔥 FLASH SALE BLIBLI 🔥\n\n";
-
-products.forEach(item=>{
-
-console.log(
-`${item.harga} | ${item.diskon}%`
-);
-
-pesan+=
-`💰 ${item.harga}\n`+
-`🔥 Diskon ${item.diskon}%\n`+
-`🔗 ${item.link}\n\n`;
-
-});
-
-await bot.sendMessage(
-chatId,
-pesan
-);
-
-console.log(
-"Telegram terkirim"
-);
-
-}
 
 await browser.close();
 

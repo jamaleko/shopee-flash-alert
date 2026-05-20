@@ -1,4 +1,4 @@
-const axios = require("axios");
+const { chromium } = require("playwright");
 const TelegramBot = require("node-telegram-bot-api");
 
 const bot = new TelegramBot(
@@ -19,57 +19,156 @@ r=>setTimeout(r,ms)
 
 async function run(){
 
+let browser;
+
 try{
 
-console.log(
-"Ambil data blibli..."
-);
+browser=
+await chromium.launch({
 
-/*
-SEARCH PRODUK
-lebih stabil dibanding flashsale page
-*/
+headless:true,
 
-const url =
-"https://www.blibli.com/backend/search/products?searchTerm=flashsale&start=0&itemPerPage=10";
+args:[
 
-const res =
-await axios.get(url,{
+"--no-sandbox",
+"--disable-setuid-sandbox",
+"--disable-dev-shm-usage"
 
-headers:{
-
-"User-Agent":
-"Mozilla/5.0"
-
-},
-
-timeout:30000
+]
 
 });
 
-const data =
-res.data;
+const context=
+await browser.newContext({
+
+viewport:{
+width:1366,
+height:768
+},
+
+userAgent:
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36"
+
+});
+
+const page=
+await context.newPage();
 
 let products=[];
 
 /*
-ambil product list
+tangkap response API
+dari browser asli
 */
 
+page.on(
+"response",
+async(response)=>{
+
+try{
+
+const url=
+response.url();
+
 if(
-data &&
-data.data &&
-data.data.products
+
+url.includes("flashsale") ||
+url.includes("product") ||
+url.includes("search")
+
 ){
 
-products =
-data.data.products;
+console.log(
+"API:",
+url
+);
+
+const json=
+await response.json()
+.catch(()=>null);
+
+if(!json) return;
+
+const text=
+JSON.stringify(json);
+
+const harga=
+text.match(
+/Rp[\d\.]+/g
+);
+
+if(
+harga
+){
+
+products.push({
+
+nama:
+url.slice(
+0,
+80
+),
+
+harga:
+harga[0],
+
+link:url
+
+});
 
 }
+
+}
+
+}catch(e){}
+
+}
+);
+
+console.log(
+"Buka blibli..."
+);
+
+await page.goto(
+"https://www.blibli.com/flashsale",
+{
+waitUntil:"domcontentloaded",
+timeout:90000
+}
+);
+
+console.log(
+"Halaman terbuka"
+);
+
+await page.waitForTimeout(
+20000
+);
 
 console.log(
 "Jumlah produk:",
 products.length
+);
+
+products=[
+
+...new Map(
+
+products.map(
+x=>[
+x.link,
+x
+]
+)
+
+).values()
+
+]
+
+.slice(0,10);
+
+console.log(
+"=== FLASH SALE ==="
 );
 
 if(
@@ -77,45 +176,31 @@ products.length===0
 ){
 
 console.log(
-"Tidak ada produk"
+"Tidak ada produk ditemukan"
 );
 
 return;
 
 }
 
-let pesan =
-"🔥 BLIBLI FLASHSALE 🔥\n\n";
+let pesan=
+"🔥 FLASH SALE BLIBLI 🔥\n\n";
 
-products.forEach(item=>{
-
-const nama =
-item.name || "Produk";
-
-const harga =
-item.price?.priceDisplay ||
-item.price?.minPrice ||
-"-";
-
-const link =
-"https://www.blibli.com" +
-(item.url || "");
+for(const item of products){
 
 console.log(
-nama
+item.harga
 );
 
-pesan +=
+pesan+=
 
-`📦 ${nama}
+`💰 ${item.harga}
 
-💰 ${harga}
-
-🔗 ${link}
+🔗 ${item.link}
 
 `;
 
-});
+}
 
 await bot.sendMessage(
 chatId,
@@ -132,6 +217,14 @@ console.log(
 "ERROR:",
 err.message
 );
+
+}finally{
+
+if(browser){
+
+await browser.close();
+
+}
 
 }
 

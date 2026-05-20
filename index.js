@@ -7,11 +7,24 @@ const browser = await chromium.launch({
     args:[
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage"
+        "--disable-dev-shm-usage",
+        "--disable-blink-features=AutomationControlled"
     ]
 });
 
-const page = await browser.newPage();
+const context = await browser.newContext({
+    userAgent:
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+
+    viewport:{
+        width:1366,
+        height:768
+    },
+
+    locale:"id-ID"
+});
+
+const page = await context.newPage();
 
 await page.goto(
     "https://www.blibli.com",
@@ -21,20 +34,23 @@ await page.goto(
     }
 );
 
+// sembunyikan webdriver
+await page.addInitScript(()=>{
+Object.defineProperty(
+navigator,
+'webdriver',
+{
+get:()=>false
+});
+});
+
 console.log(
-    "Title:",
-    await page.title()
+"Title:",
+await page.title()
 );
-
-// ambil HTML langsung, lebih ringan
-const html = await page.content();
-
-console.log(
-    html.substring(0,500)
-);
-
-await browser.close();
 
 console.log("Done");
+
+await browser.close();
 
 })();

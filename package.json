@@ -1,10 +1,11 @@
 {
-  "name":"blibli-bot",
-  "dependencies":{
-    "playwright":"latest",
-    "node-telegram-bot-api":"latest"
+  "name": "blibli-bot",
+  "dependencies": {
+    "playwright": "^1.52.0",
+    "node-telegram-bot-api": "^0.66.0"
   },
-  "scripts":{
-    "start":"node index.js"
+  "scripts": {
+    "postinstall": "npx playwright install chromium",
+    "start": "node index.js"
   }
 }

@@ -86,7 +86,7 @@ console.log(
 );
 
 await page.goto(
-"https://www.blibli.com/flashsale",
+"https://shopee.co.id/flash_sale",
 {
 waitUntil:"domcontentloaded",
 timeout:120000

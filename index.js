@@ -6,7 +6,7 @@ process.env.BOT_TOKEN,
 { polling:false }
 );
 
-const chatId =
+const chatId=
 process.env.CHAT_ID;
 
 async function sleep(ms){
@@ -23,7 +23,7 @@ let browser=null;
 
 try{
 
-browser =
+browser=
 await chromium.launch({
 
 headless:true,
@@ -36,7 +36,7 @@ args:[
 
 });
 
-const page =
+const page=
 await browser.newPage({
 
 viewport:{
@@ -57,7 +57,7 @@ await page.goto(
 "https://www.blibli.com/flashsale",
 {
 waitUntil:"domcontentloaded",
-timeout:60000
+timeout:90000
 }
 );
 
@@ -66,90 +66,127 @@ console.log(
 );
 
 await page.waitForTimeout(
-12000
+15000
 );
 
 /*
-scroll sedikit
+scroll dikit
 */
 
 await page.mouse.wheel(
 0,
-1500
+1000
 );
 
 await page.waitForTimeout(
 3000
 );
 
-console.log(
-"Title:",
-await page.title()
-);
-
 /*
-AMBIL LINK PRODUK
+ambil text langsung dari halaman
+BUKAN a[href]
+karena Blibli virtual render
 */
 
-const links =
-await page.locator(
-'a[href*="/p/"]'
-).all();
+const products=
+await page.evaluate(()=>{
 
-console.log(
-"Jumlah link:",
-links.length
-);
+const hasil=[];
 
-const products=[];
+const semua=
+[
+...document.querySelectorAll("*")
+];
 
-for(
-let i=0;
-i<links.length;
-i++
-){
+semua.forEach(el=>{
 
-try{
+const text=
+el.innerText?.trim();
 
-const el =
-links[i];
+if(
+!text
+)
+return;
 
-const text =
-await el.innerText();
+/*
+harus ada harga
+*/
 
-if(!text) continue;
-
-const hargaMatch =
-text.match(
+if(
+!text.match(
 /Rp[\d\.]+/
-);
+)
+)
+return;
 
-if(!hargaMatch)
-continue;
-
-const href =
-await el.getAttribute(
-"href"
-);
-
-if(!href)
-continue;
-
-const lines =
-text
-.split("\n")
-.map(x=>x.trim())
-.filter(Boolean);
-
-let nama="Produk";
-
-for(const line of lines){
+/*
+buang sampah
+*/
 
 if(
 
-!line.includes("Rp") &&
-line.length > 5 &&
-!line.includes("Beli sekarang") &&
+text.includes("Masuk")||
+text.includes("Daftar")||
+text.includes("Kategori")||
+text.includes("Berlangsung")||
+text.includes("Besok")||
+text.includes("Peringat")||
+text.includes("Akan hadir")
+
+){
+return;
+}
+
+const lines=
+text
+.split("\n")
+.map(
+x=>x.trim()
+)
+.filter(Boolean);
+
+let harga="";
+let nama="";
+
+/*
+harga
+*/
+
+for(
+const line of lines
+){
+
+const m=
+line.match(
+/Rp[\d\.]+/
+);
+
+if(
+m
+){
+
+harga=
+m[0];
+
+break;
+
+}
+
+}
+
+/*
+nama
+*/
+
+for(
+const line of lines
+){
+
+if(
+
+!line.includes("Rp")&&
+line.length>10&&
+!line.includes("Beli sekarang")&&
 !line.includes("Cepat habis")
 
 ){
@@ -161,58 +198,102 @@ break;
 
 }
 
-products.push({
+if(
+!nama||
+!harga
+)
+return;
+
+/*
+cari link parent
+*/
+
+let parent=
+el;
+
+let link="";
+
+for(
+let i=0;
+i<10;
+i++
+){
+
+if(
+!parent
+)
+break;
+
+const a=
+parent.querySelector?.(
+"a[href]"
+);
+
+if(
+a &&
+a.href
+){
+
+link=
+a.href.split("?")[0];
+
+break;
+
+}
+
+parent=
+parent.parentElement;
+
+}
+
+hasil.push({
 
 nama,
-
-harga:hargaMatch[0],
-
-link:
-href.split("?")[0]
+harga,
+link
 
 });
 
-}catch(err){
-
-console.log(
-"Gagal baca item"
-);
-
-}
-
-}
+});
 
 /*
 hapus duplikat
 */
 
-const unique = [
+return [
 ...new Map(
 
-products.map(
+hasil.map(
 x=>[
-x.link,
+x.nama,
 x
 ]
 )
 
 ).values()
+
 ]
 
-.slice(0,10);
+.slice(
+0,
+10
+);
+
+});
 
 console.log("");
+
 console.log(
 "=== FLASH SALE ==="
 );
 
 console.log(
 "Jumlah produk:",
-unique.length
+products.length
 );
 
 if(
-unique.length===0
+products.length===0
 ){
 
 console.log(
@@ -221,10 +302,11 @@ console.log(
 
 }else{
 
-let pesan =
+let pesan=
 "🔥 FLASH SALE BLIBLI 🔥\n\n";
 
-unique.forEach(item=>{
+products.forEach(
+item=>{
 
 console.log(
 item.nama
@@ -242,17 +324,18 @@ console.log(
 "-------------"
 );
 
-pesan +=
+pesan+=
 
 `📦 ${item.nama}
 
 💰 ${item.harga}
 
-🔗 https://www.blibli.com${item.link}
+🔗 ${item.link||"-"}
 
 `;
 
-});
+}
+);
 
 await bot.sendMessage(
 chatId,
@@ -274,7 +357,9 @@ err.message
 
 }finally{
 
-if(browser){
+if(
+browser
+){
 
 await browser.close();
 

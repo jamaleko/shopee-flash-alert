@@ -48,6 +48,13 @@ await page.screenshot({
 });
 
 console.log("Screenshot dibuat");
+await bot.sendPhoto(
+    chatId,
+    "debug.png",
+    {
+        caption:"📷 Screenshot hasil Playwright"
+    }
+);
 
 const products = await page.evaluate(()=>{
 

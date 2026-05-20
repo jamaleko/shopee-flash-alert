@@ -1,56 +1,54 @@
 const { chromium } = require("playwright");
 
+async function check() {
+    const browser = await chromium.launch({
+        headless:true,
+        args:[
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-blink-features=AutomationControlled"
+        ]
+    });
+
+    const context = await browser.newContext({
+        userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+        locale:"id-ID"
+    });
+
+    const page = await context.newPage();
+
+    await page.goto(
+        "https://www.blibli.com",
+        {
+            waitUntil:"domcontentloaded",
+            timeout:60000
+        }
+    );
+
+    console.log(
+        "Title:",
+        await page.title()
+    );
+
+    await browser.close();
+}
+
 (async()=>{
 
-const browser = await chromium.launch({
-    headless:true,
-    args:[
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-blink-features=AutomationControlled"
-    ]
-});
+while(true){
 
-const context = await browser.newContext({
-    userAgent:
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+try{
+    await check();
+}catch(err){
+    console.log(err.message);
+}
 
-    viewport:{
-        width:1366,
-        height:768
-    },
+console.log("Sleep 60 sec");
 
-    locale:"id-ID"
-});
+await new Promise(r=>setTimeout(r,60000));
 
-const page = await context.newPage();
-
-await page.goto(
-    "https://www.blibli.com",
-    {
-        waitUntil:"domcontentloaded",
-        timeout:60000
-    }
-);
-
-// sembunyikan webdriver
-await page.addInitScript(()=>{
-Object.defineProperty(
-navigator,
-'webdriver',
-{
-get:()=>false
-});
-});
-
-console.log(
-"Title:",
-await page.title()
-);
-
-console.log("Done");
-
-await browser.close();
+}
 
 })();

@@ -6,7 +6,7 @@ process.env.BOT_TOKEN,
 { polling:false }
 );
 
-const chatId=
+const chatId =
 process.env.CHAT_ID;
 
 async function sleep(ms){
@@ -19,11 +19,11 @@ r=>setTimeout(r,ms)
 
 async function checkFlashsale(){
 
-let browser=null;
+let browser = null;
 
 try{
 
-browser=
+browser =
 await chromium.launch({
 
 headless:true,
@@ -37,7 +37,7 @@ args:[
 
 });
 
-const page=
+const page =
 await browser.newPage({
 
 viewport:{
@@ -49,67 +49,6 @@ userAgent:
 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 
 });
-
-/*
-LOG SEMUA REQUEST
-*/
-
-page.on(
-"request",
-req=>{
-
-console.log(
-"[REQ]",
-req.method(),
-req.url()
-);
-
-}
-);
-
-/*
-LOG SEMUA RESPONSE
-*/
-
-page.on(
-"response",
-async(res)=>{
-
-try{
-
-const url=
-res.url();
-
-const type=
-res.headers()["content-type"]||"";
-
-console.log(
-"[RES]",
-res.status(),
-url
-);
-
-/*
-cek json
-*/
-
-if(
-type.includes(
-"application/json"
-)
-){
-
-console.log(
-"[JSON]",
-url
-);
-
-}
-
-}catch(e){}
-
-}
-);
 
 console.log(
 "Buka flashsale..."
@@ -128,26 +67,22 @@ console.log(
 );
 
 await page.waitForTimeout(
-15000
+20000
 );
 
 /*
-scroll panjang
+scroll banyak
 */
 
-for(
-let i=0;
-i<10;
-i++
-){
+for(let i=0;i<10;i++){
 
 await page.mouse.wheel(
 0,
-3000
+2500
 );
 
 console.log(
-"Scroll:",
+"Scroll",
 i+1
 );
 
@@ -163,39 +98,154 @@ await page.title()
 );
 
 /*
-ambil isi html sedikit
+AMBIL SEMUA LINK PRODUK
 */
 
-const html=
-await page.content();
+const products =
+await page.$$eval(
+'a[href*="/p/"]',
+els=>{
+
+const hasil=[];
+
+els.forEach(el=>{
+
+const text =
+el.innerText?.trim();
+
+if(!text) return;
+
+if(
+text.includes("Masuk") ||
+text.includes("Daftar") ||
+text.includes("Kategori")
+){
+return;
+}
+
+const hargaMatch =
+text.match(/Rp[\d\.]+/);
+
+if(!hargaMatch) return;
+
+const lines =
+text
+.split("\n")
+.map(x=>x.trim())
+.filter(Boolean);
+
+let nama = "Produk";
+
+for(const line of lines){
+
+if(
+
+!line.includes("Rp") &&
+line.length > 5 &&
+!line.includes("Beli sekarang") &&
+!line.includes("Cepat habis")
+
+){
+
+nama = line;
+break;
+
+}
+
+}
+
+hasil.push({
+
+nama,
+
+harga:hargaMatch[0],
+
+link:
+el.href.split("?")[0]
+
+});
+
+});
+
+return [...new Map(
+
+hasil.map(
+x=>[
+x.link,
+x
+]
+)
+
+).values()]
+
+.slice(0,10);
+
+}
+);
+
+console.log("");
+console.log(
+"=== FLASH SALE ==="
+);
 
 console.log(
-"HTML length:",
-html.length
+"Jumlah produk:",
+products.length
 );
 
-/*
-cek ada Rp atau tidak
-*/
+if(
+products.length===0
+){
 
-const bodyText=
-await page.evaluate(
-()=>document.body.innerText
+console.log(
+"Tidak ada produk ditemukan"
+);
+
+}else{
+
+let pesan =
+"🔥 FLASH SALE BLIBLI 🔥\n\n";
+
+products.forEach(item=>{
+
+console.log(
+item.nama
 );
 
 console.log(
-"ADA RP:",
-bodyText.includes("Rp")
+item.harga
 );
 
 console.log(
-"CONTOH TEXT:"
+item.link
 );
 
 console.log(
-bodyText
-.substring(0,3000)
+"-------------"
 );
+
+pesan +=
+
+`📦 ${item.nama}
+
+💰 ${item.harga}
+
+🔗 ${item.link}
+
+`;
+
+});
+
+await bot.sendMessage(
+chatId,
+pesan
+);
+
+console.log(
+"Telegram terkirim"
+);
+
+}
 
 }catch(err){
 

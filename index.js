@@ -1,36 +1,30 @@
-const puppeteer=require("puppeteer");
-const axios=require("axios");
+const puppeteer = require("puppeteer");
+const axios = require("axios");
 
-const BOT_TOKEN=process.env.BOT_TOKEN;
-const CHAT_ID=process.env.CHAT_ID;
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const CHAT_ID = process.env.CHAT_ID;
 
-const sentProducts=new Set();
-
-async function sendTelegram(message){
-
+async function kirimTelegram(text) {
 try{
 
 await axios.post(
 `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
 {
 chat_id:CHAT_ID,
-text:message
+text:text
 }
 );
 
-console.log(
-"Telegram terkirim"
-);
+console.log("Telegram terkirim");
 
-}catch(err){
+}catch(e){
 
 console.log(
-"Telegram error:",
-err.message
+"Telegram gagal:",
+e.message
 );
 
 }
-
 }
 
 async function run(){
@@ -49,14 +43,19 @@ args:[
 "--disable-setuid-sandbox",
 "--disable-dev-shm-usage",
 "--disable-gpu",
-"--disable-web-security"
+"--disable-blink-features=AutomationControlled"
 
 ]
 
 });
 
-const page=
-await browser.newPage();
+const page=await browser.newPage();
+
+await page.setUserAgent(
+
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+
+);
 
 await page.setViewport({
 
@@ -65,50 +64,9 @@ height:768
 
 });
 
-await page.setUserAgent(
-
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136 Safari/537.36"
-
-);
-
-
-
-// hemat RAM Northflank
-await page.setRequestInterception(
-true
-);
-
-page.on(
-"request",
-(req)=>{
-
-const type=
-req.resourceType();
-
-if(
-
-type==="image" ||
-type==="font" ||
-type==="media"
-
-){
-
-req.abort();
-
-}else{
-
-req.continue();
-
-}
-
-}
-);
-
-
 console.log(
 "Buka flashsale..."
 );
-
 
 await page.goto(
 
@@ -123,201 +81,123 @@ timeout:0
 
 );
 
-
-// tunggu halaman hidup dulu
-await page.waitForTimeout(15000);
-
-// scroll supaya flashsale dirender
-await page.evaluate(async()=>{
-
-window.scrollTo(
-0,
-700
-);
-
-await new Promise(
-r=>setTimeout(r,3000)
-);
-
-window.scrollTo(
-0,
-1400
-);
-
-await new Promise(
-r=>setTimeout(r,3000)
-);
-
-window.scrollTo(
-0,
-2000
-);
-
-});
-
-// tunggu sampai produk muncul
-await page.waitForFunction(()=>{
-
-return document.querySelectorAll(
-".els-fs-compact"
-).length>0;
-
-},{
-timeout:60000
-});
-
 console.log(
-"Produk ditemukan:",
-await page.$$eval(
-".els-fs-compact",
-x=>x.length
-)
+"URL:",
+page.url()
 );
 
-
-await page.waitForTimeout(
-10000
+// tunggu render
+await new Promise(
+r=>setTimeout(r,15000)
 );
 
+// scroll bertahap
+for(let i=0;i<5;i++){
+
+await page.evaluate(y=>{
+
+window.scrollBy(
+0,
+y
+);
+
+},1000);
+
+await new Promise(
+r=>setTimeout(r,3000)
+);
+
+}
+
+const title=await page.title();
 
 console.log(
 "Title:",
-await page.title()
+title
 );
 
+// ambil produk flashsale
+const data=await page.evaluate(()=>{
 
+let result=[];
 
-const products=
-await page.evaluate(()=>{
-
-const result=[];
-
-const cards=
-document.querySelectorAll(
+const cards=document.querySelectorAll(
 ".els-fs-compact"
 );
-
 
 cards.forEach(card=>{
 
 try{
 
+const html=card.innerHTML;
 
-// harga
-
-const priceEl=
-card.querySelector(
-".els-fs-compact__price span:last-child"
+const diskonMatch=
+html.match(
+/>(\d+)%</
 );
 
-const price=
-priceEl?.innerText
-?.trim()
-||"";
+if(
+!diskonMatch
+)return;
 
-
-
-// diskon
-
-const discountEl=
-card.querySelector(
-".els-ribbon__content span"
+const diskon=parseInt(
+diskonMatch[1]
 );
 
-const discountText=
-discountEl?.innerText
-||"0";
+if(
+diskon<70
+)return;
 
-const discount=
-parseInt(
-discountText.replace(/\D/g,"")
-)
-||0;
+const harga=
+card.innerText.match(
+/Rp[\d\.]+/
+)?.[0]||"";
 
-
-
-// link
+if(
+!harga
+)return;
 
 let link=
-"https://www.blibli.com/flashsale";
-
-const a=
-card.closest("a");
+card.querySelector(
+"a"
+)?.href||"";
 
 if(
-a &&
-a.href
+link &&
+!link.startsWith(
+"http"
+)
 ){
 
-link=a.href;
+link=
+"https://www.blibli.com"+
+link;
 
 }
-
-
-
-// nama
-
-let name=
-card.innerText
-.split("\n")
-.find(x=>
-
-x &&
-!x.includes("Rp") &&
-!x.includes("%") &&
-!x.includes("Beli sekarang")
-
-);
-
-if(
-!name
-){
-
-name=
-"Produk Flash Sale";
-
-}
-
-
-
-// hanya diskon >=70%
-
-if(
-
-discount>=70 &&
-price
-
-){
 
 result.push({
 
-name,
-price:"Rp"+price,
-discount,
+diskon,
+harga,
 link
 
 });
-
-}
 
 }catch(e){}
 
 });
 
-
 return result;
 
 });
 
-
-
 console.log(
-"\n=== DISKON >=70% ==="
+"Produk:",
+data.length
 );
 
-
 if(
-products.length===0
+data.length===0
 ){
 
 console.log(
@@ -326,69 +206,39 @@ console.log(
 
 }else{
 
-
 for(
-const p of products
+const item of data
 ){
 
-const key=
-
-p.price+
-p.discount+
-p.link;
-
-
-if(
-sentProducts.has(
-key
-)
-){
-
-continue;
-
-}
-
-
-sentProducts.add(
-key
-);
-
-
-console.log(
-p
-);
-
-
-const message=
+const pesan=
 
 `🔥 FLASH SALE BLIBLI 🔥
 
-${p.name}
+💸 Diskon : ${item.diskon}%
 
-💰 Harga : ${p.price}
+💰 Harga : ${item.harga}
 
-🎁 Diskon : ${p.discount}%
+🔗 ${item.link||"https://www.blibli.com/flashsale"}`;
 
-🔗 ${p.link}`;
+console.log(
+pesan
+);
 
-
-await sendTelegram(
-message
+await kirimTelegram(
+pesan
 );
 
 }
 
-
 }
-
 
 await browser.close();
 
-}catch(err){
+}catch(e){
 
 console.log(
 "ERROR:",
-err.message
+e.message
 );
 
 if(browser){
@@ -401,8 +251,6 @@ await browser.close();
 
 }
 
-
-
 (async()=>{
 
 while(true){
@@ -414,12 +262,10 @@ console.log(
 );
 
 await new Promise(
-
 r=>setTimeout(
 r,
 300000
 )
-
 );
 
 }

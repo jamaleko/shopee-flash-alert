@@ -11,13 +11,7 @@ polling:false
 const chatId=process.env.CHAT_ID;
 
 async function sleep(ms){
-
-return new Promise(resolve=>{
-
-setTimeout(resolve,ms);
-
-});
-
+return new Promise(r=>setTimeout(r,ms));
 }
 
 async function checkFlashsale(){
@@ -61,9 +55,7 @@ timeout:60000
 }
 );
 
-await page.waitForTimeout(
-15000
-);
+await page.waitForTimeout(15000);
 
 console.log(
 "Title:",
@@ -74,43 +66,50 @@ const products=await page.evaluate(()=>{
 
 const hasil=[];
 
-const cards=
-document.querySelectorAll(
+const cards=document.querySelectorAll(
 'a[href*="/p/"]'
 );
 
 cards.forEach(card=>{
 
-const text=
-card.innerText?.trim();
-
-if(!text) return;
+const txt=
+card.innerText || "";
 
 if(
-text.includes("Akan hadir")
-||
-text.includes("Besok")
-||
-text.includes("Peringat")
-||
-text.includes("Rp??")
+txt.includes("Akan hadir") ||
+txt.includes("Besok") ||
+txt.includes("Peringat")
 ){
 return;
 }
 
 const harga=
-text.match(
+txt.match(
 /Rp[\d\.]+/
 )?.[0];
 
 if(!harga) return;
 
-const diskon=
-parseInt(
-text.match(
+
+/*
+ambil diskon dari semua isi card
+*/
+
+let diskon=0;
+
+const persen=
+txt.match(
 /(\d+)%/
-)?.[1] || "0"
 );
+
+if(
+persen
+){
+diskon=
+parseInt(
+persen[1]
+);
+}
 
 if(
 diskon<70
@@ -144,16 +143,13 @@ link
 
 });
 
-return hasil.slice(
-0,
-10
-);
+return hasil;
 
 });
 
 console.log("");
 console.log(
-"=== DISKON ≥70% ==="
+"=== DISKON >=70% ==="
 );
 
 if(
@@ -172,22 +168,7 @@ let pesan=
 products.forEach(item=>{
 
 console.log(
-"----------------"
-);
-
-console.log(
-"Harga:",
-item.harga
-);
-
-console.log(
-"Diskon:",
-item.diskon+"%"
-);
-
-console.log(
-"Link:",
-item.link
+`${item.harga} | ${item.diskon}%`
 );
 
 pesan+=

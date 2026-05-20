@@ -3,18 +3,20 @@ const TelegramBot = require("node-telegram-bot-api");
 
 const bot = new TelegramBot(
 process.env.BOT_TOKEN,
-{polling:false}
+{ polling:false }
 );
 
 const chatId=process.env.CHAT_ID;
 
 async function sleep(ms){
-return new Promise(resolve=>setTimeout(resolve,ms));
+return new Promise(
+resolve=>setTimeout(resolve,ms)
+);
 }
 
 async function checkFlashsale(){
 
-let browser;
+let browser=null;
 
 try{
 
@@ -50,13 +52,17 @@ console.log(
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
-waitUntil:"networkidle",
-timeout:60000
+waitUntil:"domcontentloaded",
+timeout:90000
 }
 );
 
+console.log(
+"Halaman terbuka"
+);
+
 await page.waitForTimeout(
-10000
+15000
 );
 
 console.log(
@@ -65,46 +71,43 @@ await page.title()
 );
 
 /*
-scroll beberapa kali
+scroll supaya card muncul
 */
 
-for(let i=0;i<5;i++){
+for(let i=0;i<8;i++){
 
 await page.mouse.wheel(
 0,
-1500
-);
-
-await page.waitForTimeout(
 2000
 );
 
+await page.waitForTimeout(
+3000
+);
+
 }
+
+/*
+ambil produk
+*/
 
 const products=
 await page.evaluate(()=>{
 
 const hasil=[];
 
-/*
-ambil card produk
-*/
-
 const cards=[
 
 ...document.querySelectorAll(
-'[class*="product"]'
-),
-
-...document.querySelectorAll(
-'[class*="Product"]'
-),
-
-...document.querySelectorAll(
-'[class*="card"]'
+'a[href*="/p/"]'
 )
 
 ];
+
+console.log(
+"Jumlah card:",
+cards.length
+);
 
 cards.forEach(card=>{
 
@@ -113,8 +116,25 @@ card.innerText?.trim();
 
 if(!text) return;
 
-const lines=
-text
+/*
+buang sampah
+*/
+
+if(
+
+text.includes("Masuk")||
+text.includes("Daftar")||
+text.includes("Kategori")||
+text.includes("Berlangsung")||
+text.includes("Besok")||
+text.includes("Peringat")||
+text.includes("Akan hadir")
+
+){
+return;
+}
+
+const lines=text
 .split("\n")
 .map(
 x=>x.trim()
@@ -123,7 +143,26 @@ x=>x.trim()
 
 let nama="";
 let harga="";
-let link="";
+
+/*
+ambil harga
+*/
+
+for(const line of lines){
+
+const m=
+line.match(
+/Rp[\d\.]+/
+);
+
+if(m){
+
+harga=m[0];
+break;
+
+}
+
+}
 
 /*
 ambil nama
@@ -133,70 +172,23 @@ for(const line of lines){
 
 if(
 
-!line.includes("Rp") &&
-line.length>10 &&
-!line.includes("Beli sekarang") &&
+!line.includes("Rp")&&
+line.length>10&&
+!line.includes("Beli sekarang")&&
 !line.includes("Cepat habis")
 
 ){
 
 nama=line;
-
 break;
 
 }
 
 }
 
-/*
-ambil harga
-*/
-
-for(const line of lines){
-
-const hargaMatch=
-line.match(
-/Rp[\d\.]+/
-);
-
 if(
-hargaMatch
-){
-
-harga=
-hargaMatch[0];
-
-break;
-
-}
-
-}
-
-/*
-ambil link
-*/
-
-const a=
-card.querySelector(
-"a"
-);
-
-if(
-a &&
-a.href
-){
-
-link=
-a.href.split("?")[0];
-
-}
-
-if(
-
-!nama ||
-!harga ||
-!link
-
+!nama||
+!harga
 ){
 return;
 }
@@ -205,24 +197,23 @@ hasil.push({
 
 nama,
 harga,
-link
+
+link:
+card.href
+.split("?")[0]
 
 });
 
 });
-
-/*
-hapus duplikat
-*/
 
 return [
 
 ...new Map(
 
 hasil.map(
-item=>[
-item.link,
-item
+x=>[
+x.link,
+x
 ]
 )
 
@@ -234,9 +225,7 @@ item
 
 });
 
-console.log(
-""
-);
+console.log("");
 
 console.log(
 "=== FLASH SALE ==="
@@ -278,7 +267,7 @@ item.link
 );
 
 console.log(
-"-------------"
+"----------------"
 );
 
 pesan+=
@@ -304,8 +293,6 @@ console.log(
 
 }
 
-await browser.close();
-
 }catch(err){
 
 console.log(
@@ -313,9 +300,9 @@ console.log(
 err.message
 );
 
-if(
-browser
-){
+}finally{
+
+if(browser){
 
 await browser.close();
 

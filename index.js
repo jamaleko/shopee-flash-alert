@@ -23,7 +23,7 @@ let browser;
 
 try{
 
-browser =
+browser=
 await chromium.launch({
 
 headless:true,
@@ -39,12 +39,12 @@ args:[
 
 });
 
-const page =
+const page=
 await browser.newPage({
 
 viewport:{
-width:1280,
-height:720
+width:1366,
+height:768
 },
 
 userAgent:
@@ -53,145 +53,45 @@ userAgent:
 });
 
 /*
-SIMPAN HASIL API
+matikan resource berat
+TAPI JANGAN matikan javascript
 */
 
-let apiProducts=[];
+await page.route(
+"**/*",
+async(route)=>{
 
-/*
-TANGKAP RESPONSE API
-*/
-
-page.on(
-"response",
-async(response)=>{
-
-try{
-
-const url=
-response.url();
+const type=
+route.request().resourceType();
 
 if(
 
-url.includes("flashsale") ||
-url.includes("product") ||
-url.includes("search")
+type==="image"||
+type==="media"||
+type==="font"
 
 ){
 
-const headers=
-response.headers();
+await route.abort();
 
-const contentType=
-headers["content-type"] || "";
+}else{
 
-if(
-contentType.includes("application/json")
-){
+await route.continue();
 
-const json=
-await response.json();
+}
 
-/*
-cari array product
-*/
-
-const text=
-JSON.stringify(json);
-
-/*
-ambil semua nama + harga dari json
-*/
-
-const namaRegex=
-/"name":"(.*?)"/g;
-
-const hargaRegex=
-/"price":"?(.*?)"?[,}]/g;
-
-let names=[];
-let prices=[];
-
-let m;
-
-/*
-nama
-*/
-
-while(
-(m=namaRegex.exec(text)) !== null
-){
-
-names.push(
-m[1]
+}
 );
-
-}
-
-/*
-harga
-*/
-
-while(
-(m=hargaRegex.exec(text)) !== null
-){
-
-prices.push(
-m[1]
-);
-
-}
-
-/*
-gabung
-*/
-
-for(let i=0;i<names.length;i++){
-
-const nama=
-names[i];
-
-const harga=
-prices[i] || "-";
-
-if(
-
-nama &&
-nama.length > 5
-
-){
-
-apiProducts.push({
-
-nama,
-
-harga
-
-});
-
-}
-
-}
-
-}
-
-}
-
-}catch(e){
-
-}
-
-});
 
 console.log(
-"Buka blibli..."
+"Buka flashsale..."
 );
 
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
 waitUntil:"domcontentloaded",
-timeout:120000
+timeout:90000
 }
 );
 
@@ -200,7 +100,7 @@ console.log(
 );
 
 /*
-biarkan API jalan
+tunggu react render
 */
 
 await page.waitForTimeout(
@@ -208,16 +108,114 @@ await page.waitForTimeout(
 );
 
 /*
-hapus duplikat
+scroll pelan
 */
 
-const products=[
+for(let i=0;i<3;i++){
+
+await page.mouse.wheel(
+0,
+1200
+);
+
+await page.waitForTimeout(
+3000
+);
+
+}
+
+console.log(
+"Scraping..."
+);
+
+const products=
+await page.evaluate(()=>{
+
+const hasil=[];
+
+const semua=[
+...document.querySelectorAll("a")
+];
+
+semua.forEach(a=>{
+
+const text=
+a.innerText?.trim();
+
+if(!text)return;
+
+if(
+!text.includes("Rp")
+)return;
+
+const lines=
+text
+.split("\n")
+.map(x=>x.trim())
+.filter(Boolean);
+
+let nama="";
+let harga="";
+
+for(const line of lines){
+
+if(
+
+!harga &&
+line.match(/Rp[\d\.]+/)
+
+){
+
+harga=
+line.match(
+/Rp[\d\.]+/
+)[0];
+
+}
+
+if(
+
+!nama &&
+!line.includes("Rp") &&
+line.length>8 &&
+!line.includes("Beli sekarang") &&
+!line.includes("Cepat habis")
+
+){
+
+nama=line;
+
+}
+
+}
+
+if(
+!nama ||
+!harga
+){
+return;
+}
+
+hasil.push({
+
+nama,
+
+harga,
+
+link:
+a.href.split("?")[0]
+
+});
+
+});
+
+return [
 
 ...new Map(
 
-apiProducts.map(
+hasil.map(
 x=>[
-x.nama,
+x.link,
 x
 ]
 )
@@ -228,10 +226,7 @@ x
 
 .slice(0,10);
 
-console.log("");
-console.log(
-"=== FLASH SALE ==="
-);
+});
 
 console.log(
 "Jumlah produk:",
@@ -246,7 +241,9 @@ console.log(
 "Tidak ada produk ditemukan"
 );
 
-}else{
+return;
+
+}
 
 let pesan=
 "🔥 FLASH SALE BLIBLI 🔥\n\n";
@@ -262,31 +259,33 @@ item.harga
 );
 
 console.log(
-"-------------"
+item.link
 );
 
-pesan +=
+console.log(
+"------------"
+);
+
+pesan+=
 
 `📦 ${item.nama}
 
 💰 ${item.harga}
+
+🔗 ${item.link}
 
 `;
 
 });
 
 await bot.sendMessage(
-
 chatId,
 pesan
-
 );
 
 console.log(
 "Telegram terkirim"
 );
-
-}
 
 }catch(err){
 

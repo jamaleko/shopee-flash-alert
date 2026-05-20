@@ -42,7 +42,8 @@ headless:true,
 args:[
 "--no-sandbox",
 "--disable-setuid-sandbox",
-"--disable-dev-shm-usage"
+"--disable-dev-shm-usage",
+"--disable-blink-features=AutomationControlled"
 ]
 
 });
@@ -57,13 +58,6 @@ height:768
 
 });
 
-await page.setExtraHTTPHeaders({
-
-"accept-language":
-"id-ID,id;q=0.9"
-
-});
-
 console.log(
 "Buka flashsale..."
 );
@@ -71,7 +65,7 @@ console.log(
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
-waitUntil:"networkidle",
+waitUntil:"domcontentloaded",
 timeout:90000
 }
 );
@@ -81,7 +75,7 @@ console.log(
 );
 
 await page.waitForTimeout(
-15000
+10000
 );
 
 /*
@@ -90,11 +84,11 @@ scroll kecil
 
 await page.mouse.wheel(
 0,
-1200
+1000
 );
 
 await page.waitForTimeout(
-5000
+3000
 );
 
 console.log(
@@ -103,20 +97,8 @@ await page.title()
 );
 
 /*
-cek body
-*/
-
-const body =
-await page.locator("body")
-.innerText();
-
-console.log(
-"BODY LENGTH:",
-body.length
-);
-
-/*
-ambil semua harga
+JANGAN BODY INNER TEXT
+langsung ambil semua text Rp
 */
 
 const products =
@@ -129,24 +111,25 @@ const semua =
 ...document.querySelectorAll("*")
 ];
 
-semua.forEach(el=>{
+for(const el of semua){
+
+try{
 
 const text =
-el.innerText?.trim();
+el.textContent?.trim();
 
-if(!text) return;
-
-if(
-!text.match(
-/Rp[\d\.]+/
-)
-)
-return;
+if(!text)
+continue;
 
 if(
-text.length > 300
+!text.includes("Rp")
 )
-return;
+continue;
+
+if(
+text.length > 200
+)
+continue;
 
 const harga =
 text.match(
@@ -154,7 +137,7 @@ text.match(
 )?.[0];
 
 if(!harga)
-return;
+continue;
 
 const lines =
 text
@@ -169,7 +152,8 @@ for(const line of lines){
 if(
 
 !line.includes("Rp") &&
-line.length > 5
+line.length > 5 &&
+!line.includes("Beli sekarang")
 
 ){
 
@@ -187,7 +171,9 @@ harga
 
 });
 
-});
+}catch(e){}
+
+}
 
 return hasil.slice(0,10);
 
@@ -211,7 +197,19 @@ console.log(
 let pesan =
 "🔥 FLASH SALE BLIBLI 🔥\n\n";
 
-products.forEach(item=>{
+for(const item of products){
+
+console.log(
+item.nama
+);
+
+console.log(
+item.harga
+);
+
+console.log(
+"-----------"
+);
 
 pesan +=
 
@@ -221,7 +219,7 @@ pesan +=
 
 `;
 
-});
+}
 
 await bot.sendMessage(
 chatId,

@@ -3,7 +3,7 @@ const TelegramBot = require("node-telegram-bot-api");
 
 const bot = new TelegramBot(
 process.env.BOT_TOKEN,
-{ polling:false }
+{polling:false}
 );
 
 const chatId=process.env.CHAT_ID;
@@ -48,12 +48,14 @@ console.log("Buka flashsale...");
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
-waitUntil:"domcontentloaded",
+waitUntil:"networkidle",
 timeout:60000
 }
 );
 
-await page.waitForTimeout(15000);
+await page.waitForTimeout(
+10000
+);
 
 console.log(
 "Title:",
@@ -61,35 +63,57 @@ await page.title()
 );
 
 /*
-scroll supaya produk muncul
+scroll beberapa kali
 */
+
+for(let i=0;i<5;i++){
 
 await page.mouse.wheel(
 0,
-1500
+2000
 );
 
 await page.waitForTimeout(
-5000
+2000
 );
+
+}
+
+/*
+ambil semua text halaman
+*/
 
 const products=await page.evaluate(()=>{
 
 const hasil=[];
 
-const cards=[
-...document.querySelectorAll("a")
+/*
+ambil elemen yang ada harga
+*/
+
+const semua=[
+...document.querySelectorAll("*")
 ];
 
-cards.forEach(card=>{
+semua.forEach(el=>{
 
 const text=
-card.innerText?.trim();
+el.innerText?.trim();
 
 if(!text) return;
 
 /*
-buang menu/header
+harus ada Rp
+*/
+
+if(
+!text.match(/Rp[\d\.]+/)
+){
+return;
+}
+
+/*
+buang sampah
 */
 
 if(
@@ -97,66 +121,78 @@ if(
 text.includes("Masuk")||
 text.includes("Daftar")||
 text.includes("Kategori")||
-text.includes("Peringat")||
 text.includes("Berlangsung")||
 text.includes("Besok")||
+text.includes("Peringat")||
 text.includes("Akan hadir")
 
 ){
 return;
 }
 
-/*
-harus ada harga
-*/
-
-const harga=
-text.match(
-/Rp[\d\.]+/
-);
-
-if(!harga) return;
-
-const link=
-card.href;
-
-if(
-!link ||
-!link.startsWith("http")
-){
-return;
-}
-
-/*
-pecah text
-*/
-
 const lines=text
 .split("\n")
 .map(x=>x.trim())
 .filter(Boolean);
 
-let nama="Produk";
+let harga="";
+let nama="";
 
-for(let i=0;i<lines.length;i++){
-
-const baris=
-lines[i];
-
-/*
-nama produk:
-bukan harga
-minimal panjang
-*/
+for(const line of lines){
 
 if(
+!harga &&
+line.match(/Rp[\d\.]+/)
+){
+harga=line.match(
+/Rp[\d\.]+/
+)[0];
+}
 
-!baris.includes("Rp")&&
-baris.length>10
+if(
+!nama &&
+!line.includes("Rp") &&
+line.length>10
+){
+nama=line;
+}
 
+}
+
+if(
+!harga ||
+!nama
+){
+return;
+}
+
+/*
+cari link terdekat
+*/
+
+let parent=el;
+
+for(let i=0;i<5;i++){
+
+if(
+parent.querySelector &&
+parent.querySelector("a")
 ){
 
-nama=baris;
+const a=
+parent.querySelector("a");
+
+if(
+a.href
+){
+
+hasil.push({
+
+nama:nama,
+harga:harga,
+link:a.href.split("?")[0]
+
+});
 
 break;
 
@@ -164,34 +200,25 @@ break;
 
 }
 
-hasil.push({
+parent=
+parent.parentElement;
 
-nama:nama,
+if(!parent) break;
 
-harga:harga[0],
-
-link:
-link.split("?")[0]
+}
 
 });
-
-});
-
-/*
-hapus duplikat
-*/
 
 return [...new Map(
 
 hasil.map(
-item=>[
-item.link,
-item
+x=>[
+x.link,
+x
 ]
 )
 
 ).values()]
-
 .slice(0,10);
 
 });
@@ -209,33 +236,26 @@ console.log(
 
 }else{
 
-products.forEach(item=>{
-
-console.log(
-"Nama:",
-item.nama
-);
-
-console.log(
-"Harga:",
-item.harga
-);
-
-console.log(
-"Link:",
-item.link
-);
-
-console.log(
-"---------------"
-);
-
-});
-
 let pesan=
 "🔥 FLASH SALE BLIBLI 🔥\n\n";
 
 products.forEach(item=>{
+
+console.log(
+item.nama
+);
+
+console.log(
+item.harga
+);
+
+console.log(
+item.link
+);
+
+console.log(
+"-------------"
+);
 
 pesan+=
 

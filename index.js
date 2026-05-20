@@ -33,7 +33,8 @@ args:[
 "--no-sandbox",
 "--disable-setuid-sandbox",
 "--disable-dev-shm-usage",
-"--disable-gpu"
+"--disable-gpu",
+"--single-process"
 ]
 
 });
@@ -44,10 +45,7 @@ await browser.newPage({
 viewport:{
 width:1280,
 height:720
-},
-
-userAgent:
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36"
+}
 
 });
 
@@ -59,7 +57,7 @@ await page.goto(
 "https://www.blibli.com/flashsale",
 {
 waitUntil:"domcontentloaded",
-timeout:90000
+timeout:120000
 }
 );
 
@@ -67,27 +65,29 @@ console.log(
 "Halaman terbuka"
 );
 
-/*
-jangan lama-lama
-*/
-
 await page.waitForTimeout(
-8000
+5000
 );
 
 console.log(
-"Ambil screenshot..."
+"Ambil screenshot ringan..."
 );
 
 /*
-JANGAN fullPage
+SUPER RINGAN
+hanya area kecil
 */
 
 await page.screenshot({
 
 path:"blibli.png",
 
-timeout:20000
+clip:{
+x:0,
+y:0,
+width:1280,
+height:720
+}
 
 });
 
@@ -105,7 +105,7 @@ fs.createReadStream(
 
 {
 caption:
-"🔥 BLIBLI FLASHSALE"
+"🔥 BLIBLI"
 }
 
 );

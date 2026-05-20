@@ -25,7 +25,6 @@ async function checkFlashsale() {
 
   const page = await context.newPage();
 
-  // sembunyikan webdriver
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "webdriver", {
       get: () => false
@@ -43,13 +42,11 @@ async function checkFlashsale() {
       }
     );
 
-    // tunggu redirect otomatis
-    await page.waitForURL(/schedule=/, {
-      timeout: 30000
-    });
+    // kasih waktu JS halaman bekerja
+    await page.waitForTimeout(10000);
 
     console.log(
-      "URL Final:",
+      "URL:",
       page.url()
     );
 
@@ -58,20 +55,10 @@ async function checkFlashsale() {
       await page.title()
     );
 
-    // tunggu produk muncul
-    await page.waitForTimeout(5000);
-
-    const products = await page.locator(
-      'a[href*="/p/"]'
-    ).allTextContents();
+    const html = await page.content();
 
     console.log(
-      "Jumlah produk:",
-      products.length
-    );
-
-    console.log(
-      products.slice(0,10)
+      html.substring(0,1000)
     );
 
   } catch(err) {
@@ -93,7 +80,7 @@ while(true){
   );
 
   await new Promise(
-    r => setTimeout(r,60000)
+    r=>setTimeout(r,60000)
   );
 
 }

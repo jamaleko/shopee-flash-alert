@@ -87,7 +87,7 @@ console.log("=== DISKON GILA ===");
 
 for(const item of products){
 
-let txt=item.text
+let txt=item
 .replace(/\n/g," ")
 .replace(/\s+/g," ")
 .trim();

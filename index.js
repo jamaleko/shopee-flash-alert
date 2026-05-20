@@ -1,7 +1,7 @@
 const { chromium } = require("playwright");
 const TelegramBot = require("node-telegram-bot-api");
 
-const bot = new TelegramBot(
+const bot=new TelegramBot(
 process.env.BOT_TOKEN,
 {
 polling:false
@@ -51,14 +51,19 @@ userAgent:
 
 });
 
-console.log("Buka flashsale...");
+console.log(
+"Buka flashsale..."
+);
 
 await page.goto(
+
 "https://www.blibli.com/flashsale",
+
 {
 waitUntil:"domcontentloaded",
 timeout:60000
 }
+
 );
 
 await page.waitForTimeout(
@@ -74,69 +79,51 @@ const products=await page.evaluate(()=>{
 
 const hasil=[];
 
-
-/*
-ambil card produk flashsale
-*/
-
-const cards=document.querySelectorAll(
-".b-flashsale-section__product"
+const spans=
+document.querySelectorAll(
+"span"
 );
 
-
-cards.forEach(card=>{
+spans.forEach(span=>{
 
 const text=
-card.innerText || "";
+span.innerText?.trim();
 
 if(
-text.includes("Akan hadir") ||
-text.includes("Besok") ||
-text.includes("Peringat")
+!text
+) return;
+
+
+/*
+harus format 70%
+*/
+
+if(
+!/^\d+%$/.test(
+text
+)
+){
+return;
+}
+
+const diskon=
+parseInt(
+text.replace(
+"%",""
+)
+);
+
+if(
+isNaN(
+diskon
+)
 ){
 return;
 }
 
 
 /*
-ambil harga
-*/
-
-const harga=
-text.match(
-/Rp[\d\.]+/
-)?.[0];
-
-if(!harga) return;
-
-
-/*
-ambil diskon dari ribbon
-*/
-
-const ribbon=
-card.querySelector(
-".els-ribbon__content span"
-);
-
-let diskon=0;
-
-if(
-ribbon
-){
-
-diskon=
-parseInt(
-ribbon.innerText
-.replace("%","")
-.trim()
-);
-
-}
-
-
-/*
-hanya 70%+
+filter >=70%
 */
 
 if(
@@ -147,13 +134,56 @@ return;
 
 
 /*
-ambil link produk
+naik parent sampai ketemu card
 */
 
-let link=
-card.querySelector(
-'a[href*="/p/"]'
-)?.href || "";
+let parent=
+span.parentElement;
+
+for(
+let i=0;
+i<10;
+i++
+){
+
+if(
+!parent
+) break;
+
+const isi=
+parent.innerText || "";
+
+if(
+isi.includes("Rp")
+){
+
+const harga=
+isi.match(
+/Rp[\d\.]+/
+)?.[0];
+
+if(
+!harga
+) break;
+
+
+/*
+ambil link
+*/
+
+let link="";
+
+const a=
+parent.querySelector(
+"a"
+);
+
+if(
+a
+){
+
+link=
+a.href || "";
 
 if(
 link &&
@@ -168,17 +198,37 @@ link;
 
 }
 
+}
+
 hasil.push({
 
-harga,
 diskon,
+harga,
 link
 
 });
 
+break;
+
+}
+
+parent=
+parent.parentElement;
+
+}
+
 });
 
-return hasil;
+return [
+...new Map(
+hasil.map(
+x=>[
+x.harga,
+x
+]
+)
+).values()
+];
 
 });
 
@@ -233,7 +283,9 @@ console.log(
 err.message
 );
 
-if(browser){
+if(
+browser
+){
 
 await browser.close();
 

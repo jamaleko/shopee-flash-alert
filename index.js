@@ -1,5 +1,7 @@
 const { chromium } = require("playwright");
 
+const seen = new Set();
+
 async function checkFlashsale(){
 
 const browser = await chromium.launch({
@@ -34,30 +36,60 @@ await page.waitForTimeout(15000);
 
 const products = await page.evaluate(()=>{
 
-let result=[];
+const hasil=[];
 
 document.querySelectorAll("*").forEach(el=>{
 
 const text=el.innerText?.trim();
 
+if(!text) return;
+
+const adaHarga=text.match(/Rp[\d\.]+/);
+const adaDiskon=text.match(/\d+%/);
+
 if(
-text &&
-text.includes("Rp")
+adaHarga ||
+adaDiskon
 ){
-result.push(text);
+
+hasil.push({
+text:text
+});
+
 }
 
 });
 
-return [...new Set(result)].slice(0,50);
+return hasil;
 
 });
 
-console.log("=== PRODUK ===");
+console.log("=== DISKON GILA ===");
 
-products.forEach(item=>{
-console.log(item);
-});
+for(const item of products){
+
+let txt=item.text
+.replace(/\n/g," ")
+.replace(/\s+/g," ")
+.trim();
+
+if(
+txt.length<10 ||
+txt.length>300
+){
+continue;
+}
+
+if(seen.has(txt)){
+continue;
+}
+
+seen.add(txt);
+
+console.log("----------------");
+console.log(txt);
+
+}
 
 }catch(err){
 

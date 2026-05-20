@@ -1,4 +1,4 @@
-const { chromium } = require("playwright");
+const axios = require("axios");
 const TelegramBot = require("node-telegram-bot-api");
 
 const bot = new TelegramBot(
@@ -19,214 +19,53 @@ r=>setTimeout(r,ms)
 
 async function run(){
 
-let browser;
-
 try{
 
-browser=
-await chromium.launch({
+console.log(
+"Ambil data blibli..."
+);
 
-headless:true,
+/*
+SEARCH PRODUK
+lebih stabil dibanding flashsale page
+*/
 
-args:[
+const url =
+"https://www.blibli.com/backend/search/products?searchTerm=flashsale&start=0&itemPerPage=10";
 
-"--no-sandbox",
-"--disable-setuid-sandbox",
-"--disable-dev-shm-usage",
-"--disable-gpu"
+const res =
+await axios.get(url,{
 
-]
+headers:{
 
-});
+"User-Agent":
+"Mozilla/5.0"
 
-const page=
-await browser.newPage({
-
-viewport:{
-width:1366,
-height:768
 },
 
-userAgent:
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36"
+timeout:30000
 
 });
+
+const data =
+res.data;
+
+let products=[];
 
 /*
-matikan resource berat
-TAPI JANGAN matikan javascript
+ambil product list
 */
 
-await page.route(
-"**/*",
-async(route)=>{
-
-const type=
-route.request().resourceType();
-
 if(
-
-type==="image"||
-type==="media"||
-type==="font"
-
+data &&
+data.data &&
+data.data.products
 ){
 
-await route.abort();
-
-}else{
-
-await route.continue();
+products =
+data.data.products;
 
 }
-
-}
-);
-
-console.log(
-"Buka flashsale..."
-);
-
-await page.goto(
-"https://www.blibli.com/flashsale",
-{
-waitUntil:"domcontentloaded",
-timeout:90000
-}
-);
-
-console.log(
-"Halaman terbuka"
-);
-
-/*
-tunggu react render
-*/
-
-await page.waitForTimeout(
-15000
-);
-
-/*
-scroll pelan
-*/
-
-for(let i=0;i<3;i++){
-
-await page.mouse.wheel(
-0,
-1200
-);
-
-await page.waitForTimeout(
-3000
-);
-
-}
-
-console.log(
-"Scraping..."
-);
-
-const products=
-await page.evaluate(()=>{
-
-const hasil=[];
-
-const semua=[
-...document.querySelectorAll("a")
-];
-
-semua.forEach(a=>{
-
-const text=
-a.innerText?.trim();
-
-if(!text)return;
-
-if(
-!text.includes("Rp")
-)return;
-
-const lines=
-text
-.split("\n")
-.map(x=>x.trim())
-.filter(Boolean);
-
-let nama="";
-let harga="";
-
-for(const line of lines){
-
-if(
-
-!harga &&
-line.match(/Rp[\d\.]+/)
-
-){
-
-harga=
-line.match(
-/Rp[\d\.]+/
-)[0];
-
-}
-
-if(
-
-!nama &&
-!line.includes("Rp") &&
-line.length>8 &&
-!line.includes("Beli sekarang") &&
-!line.includes("Cepat habis")
-
-){
-
-nama=line;
-
-}
-
-}
-
-if(
-!nama ||
-!harga
-){
-return;
-}
-
-hasil.push({
-
-nama,
-
-harga,
-
-link:
-a.href.split("?")[0]
-
-});
-
-});
-
-return [
-
-...new Map(
-
-hasil.map(
-x=>[
-x.link,
-x
-]
-)
-
-).values()
-
-]
-
-.slice(0,10);
-
-});
 
 console.log(
 "Jumlah produk:",
@@ -238,41 +77,41 @@ products.length===0
 ){
 
 console.log(
-"Tidak ada produk ditemukan"
+"Tidak ada produk"
 );
 
 return;
 
 }
 
-let pesan=
-"🔥 FLASH SALE BLIBLI 🔥\n\n";
+let pesan =
+"🔥 BLIBLI FLASHSALE 🔥\n\n";
 
 products.forEach(item=>{
 
-console.log(
-item.nama
-);
+const nama =
+item.name || "Produk";
+
+const harga =
+item.price?.priceDisplay ||
+item.price?.minPrice ||
+"-";
+
+const link =
+"https://www.blibli.com" +
+(item.url || "");
 
 console.log(
-item.harga
+nama
 );
 
-console.log(
-item.link
-);
+pesan +=
 
-console.log(
-"------------"
-);
+`📦 ${nama}
 
-pesan+=
+💰 ${harga}
 
-`📦 ${item.nama}
-
-💰 ${item.harga}
-
-🔗 ${item.link}
+🔗 ${link}
 
 `;
 
@@ -293,14 +132,6 @@ console.log(
 "ERROR:",
 err.message
 );
-
-}finally{
-
-if(browser){
-
-await browser.close();
-
-}
 
 }
 

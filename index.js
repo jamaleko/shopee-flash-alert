@@ -1,9 +1,9 @@
 const { chromium } = require("playwright");
 const TelegramBot = require("node-telegram-bot-api");
 
-const bot=new TelegramBot(
+const bot = new TelegramBot(
 process.env.BOT_TOKEN,
-{polling:false}
+{ polling:false }
 );
 
 const chatId=
@@ -31,7 +31,8 @@ headless:true,
 args:[
 "--no-sandbox",
 "--disable-setuid-sandbox",
-"--disable-dev-shm-usage"
+"--disable-dev-shm-usage",
+"--disable-blink-features=AutomationControlled"
 ]
 
 });
@@ -49,55 +50,69 @@ userAgent:
 
 });
 
+/*
+LOG SEMUA REQUEST
+*/
+
+page.on(
+"request",
+req=>{
+
 console.log(
-"Buka flashsale..."
+"[REQ]",
+req.method(),
+req.url()
 );
 
-const apiData=[];
+}
+);
 
 /*
-tangkap response API
+LOG SEMUA RESPONSE
 */
 
 page.on(
 "response",
-async(response)=>{
+async(res)=>{
 
 try{
 
 const url=
-response.url();
+res.url();
+
+const type=
+res.headers()["content-type"]||"";
+
+console.log(
+"[RES]",
+res.status(),
+url
+);
+
+/*
+cek json
+*/
 
 if(
-
-url.includes("flash")||
-url.includes("product")||
-url.includes("promo")
-
-){
-
-const contentType=
-response.headers()["content-type"];
-
-if(
-contentType &&
-contentType.includes(
+type.includes(
 "application/json"
 )
 ){
 
-const data=
-await response.json();
-
-apiData.push(data);
-
-}
+console.log(
+"[JSON]",
+url
+);
 
 }
 
 }catch(e){}
 
 }
+);
+
+console.log(
+"Buka flashsale..."
 );
 
 await page.goto(
@@ -113,11 +128,11 @@ console.log(
 );
 
 await page.waitForTimeout(
-20000
+15000
 );
 
 /*
-paksa load
+scroll panjang
 */
 
 for(
@@ -128,11 +143,16 @@ i++
 
 await page.mouse.wheel(
 0,
-2500
+3000
+);
+
+console.log(
+"Scroll:",
+i+1
 );
 
 await page.waitForTimeout(
-2000
+3000
 );
 
 }
@@ -142,187 +162,39 @@ console.log(
 await page.title()
 );
 
-console.log(
-"API ditemukan:",
-apiData.length
-);
-
-const products=[];
-
 /*
-rekursif cari data produk
+ambil isi html sedikit
 */
 
-function cariProduk(obj){
+const html=
+await page.content();
 
-if(!obj) return;
-
-if(
-Array.isArray(obj)
-){
-
-obj.forEach(
-x=>cariProduk(x)
-);
-
-return;
-
-}
-
-if(
-typeof obj==="object"
-){
-
-const nama=
-
-obj.name||
-obj.title||
-obj.productName||
-obj.productTitle||
-"";
-
-const harga=
-
-obj.price?.toString()||
-obj.salePrice?.toString()||
-obj.finalPrice?.toString()||
-"";
-
-const link=
-
-obj.url||
-obj.productUrl||
-obj.seoUrl||
-"";
-
-if(
-nama &&
-harga
-){
-
-products.push({
-
-nama,
-
-harga:
-harga.includes("Rp")
-?
-harga
-:
-`Rp${harga}`,
-
-link:
-link.startsWith("http")
-?
-link
-:
-`https://www.blibli.com${link}`
-
-});
-
-}
-
-for(
-const key in obj
-){
-
-cariProduk(
-obj[key]
-);
-
-}
-
-}
-
-}
-
-apiData.forEach(
-x=>cariProduk(x)
+console.log(
+"HTML length:",
+html.length
 );
 
 /*
-hapus duplikat
+cek ada Rp atau tidak
 */
 
-const finalProducts=
-
-[...new Map(
-
-products.map(
-x=>[
-x.link,
-x
-]
-)
-
-).values()]
-
-.slice(
-0,
-10
+const bodyText=
+await page.evaluate(
+()=>document.body.innerText
 );
 
 console.log(
-"Jumlah produk:",
-finalProducts.length
+"ADA RP:",
+bodyText.includes("Rp")
 );
 
 console.log(
-"=== FLASH SALE ==="
-);
-
-if(
-finalProducts.length===0
-){
-
-console.log(
-"Tidak ada produk ditemukan"
-);
-
-return;
-
-}
-
-let pesan=
-"🔥 FLASH SALE BLIBLI 🔥\n\n";
-
-finalProducts.forEach(item=>{
-
-console.log(
-item.nama
+"CONTOH TEXT:"
 );
 
 console.log(
-item.harga
-);
-
-console.log(
-item.link
-);
-
-console.log(
-"----------------"
-);
-
-pesan+=
-
-`📦 ${item.nama}
-
-💰 ${item.harga}
-
-🔗 ${item.link}
-
-`;
-
-});
-
-await bot.sendMessage(
-chatId,
-pesan
-);
-
-console.log(
-"Telegram terkirim"
+bodyText
+.substring(0,3000)
 );
 
 }catch(err){

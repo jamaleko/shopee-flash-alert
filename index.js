@@ -65,25 +65,21 @@ console.log(
 "Halaman terbuka"
 );
 
-/*
-jangan lama-lama
-*/
-
 await page.waitForTimeout(
-10000
+12000
 );
 
 /*
-scroll sedikit saja
+scroll sedikit
 */
 
 await page.mouse.wheel(
 0,
-1200
+1500
 );
 
 await page.waitForTimeout(
-4000
+3000
 );
 
 console.log(
@@ -91,34 +87,53 @@ console.log(
 await page.title()
 );
 
-const products =
-await page.$$eval(
+/*
+AMBIL LINK PRODUK
+*/
 
-'a[href*="/p/"]',
+const links =
+await page.locator(
+'a[href*="/p/"]'
+).all();
 
-els=>{
+console.log(
+"Jumlah link:",
+links.length
+);
 
-const hasil=[];
+const products=[];
 
-els.forEach(el=>{
+for(
+let i=0;
+i<links.length;
+i++
+){
+
+try{
+
+const el =
+links[i];
 
 const text =
-el.innerText?.trim();
+await el.innerText();
 
-if(!text) return;
-
-/*
-harus ada harga
-*/
+if(!text) continue;
 
 const hargaMatch =
-text.match(/Rp[\d\.]+/);
+text.match(
+/Rp[\d\.]+/
+);
 
-if(!hargaMatch) return;
+if(!hargaMatch)
+continue;
 
-/*
-pecah text
-*/
+const href =
+await el.getAttribute(
+"href"
+);
+
+if(!href)
+continue;
 
 const lines =
 text
@@ -146,39 +161,45 @@ break;
 
 }
 
-hasil.push({
+products.push({
 
 nama,
 
 harga:hargaMatch[0],
 
 link:
-el.href.split("?")[0]
+href.split("?")[0]
 
 });
 
-});
+}catch(err){
+
+console.log(
+"Gagal baca item"
+);
+
+}
+
+}
 
 /*
 hapus duplikat
 */
 
-return [...new Map(
+const unique = [
+...new Map(
 
-hasil.map(
+products.map(
 x=>[
 x.link,
 x
 ]
 )
 
-).values()]
+).values()
+]
 
 .slice(0,10);
-
-}
-
-);
 
 console.log("");
 console.log(
@@ -187,11 +208,11 @@ console.log(
 
 console.log(
 "Jumlah produk:",
-products.length
+unique.length
 );
 
 if(
-products.length===0
+unique.length===0
 ){
 
 console.log(
@@ -203,7 +224,7 @@ console.log(
 let pesan =
 "🔥 FLASH SALE BLIBLI 🔥\n\n";
 
-products.forEach(item=>{
+unique.forEach(item=>{
 
 console.log(
 item.nama
@@ -227,7 +248,7 @@ pesan +=
 
 💰 ${item.harga}
 
-🔗 ${item.link}
+🔗 https://www.blibli.com${item.link}
 
 `;
 

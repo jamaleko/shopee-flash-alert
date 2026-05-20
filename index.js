@@ -25,35 +25,56 @@ timeout:60000
 }
 );
 
-await page.waitForTimeout(15000);
+try {
+
+console.log("Buka flashsale...");
+
+await page.goto(
+"https://www.blibli.com/flashsale",
+{
+waitUntil:"domcontentloaded",
+timeout:60000
+}
+);
 
 console.log(
 "Title:",
 await page.title()
 );
 
-const text=await page.evaluate(()=>{
-return document.body.innerText;
+await page.waitForTimeout(15000);
+
+const products = await page.evaluate(() => {
+
+let result=[];
+
+document.querySelectorAll("*").forEach(el=>{
+
+const text=el.innerText?.trim();
+
+if(
+text &&
+text.includes("Rp")
+){
+result.push(text);
+}
+
 });
 
-console.log(
-"============== BODY =============="
-);
+return [...new Set(result)]
+.slice(0,50);
 
-console.log(
-text.substring(0,3000)
-);
+});
 
-console.log(
-"================================="
-);
+console.log("=== PRODUK ===");
+
+products.forEach(x=>{
+console.log(x);
+});
 
 }catch(err){
 
-console.log(
-"ERROR:",
-err.message
-);
+console.log("ERROR:",err.message);
 
 }
 

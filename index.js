@@ -1,21 +1,47 @@
 const { chromium } = require("playwright");
+const TelegramBot = require("node-telegram-bot-api");
 
-const seen = new Set();
+const bot = new TelegramBot(
+process.env.BOT_TOKEN,
+{polling:false}
+);
+
+const chatId=process.env.CHAT_ID;
+
+async function sleep(ms){
+return new Promise(resolve=>setTimeout(resolve,ms));
+}
 
 async function checkFlashsale(){
 
-const browser = await chromium.launch({
+let browser;
+
+try{
+
+browser=await chromium.launch({
+
 headless:true,
+
 args:[
 "--no-sandbox",
 "--disable-setuid-sandbox",
-"--disable-dev-shm-usage"
+"--disable-dev-shm-usage",
+"--disable-blink-features=AutomationControlled"
 ]
+
 });
 
-const page = await browser.newPage();
+const page=await browser.newPage({
 
-try{
+viewport:{
+width:1366,
+height:768
+},
+
+userAgent:
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36"
+
+});
 
 console.log("Buka flashsale...");
 
@@ -27,88 +53,101 @@ timeout:60000
 }
 );
 
+await page.waitForTimeout(15000);
+
 console.log(
 "Title:",
 await page.title()
 );
 
-await page.waitForTimeout(15000);
-
-const products = await page.evaluate(()=>{
+const products=await page.evaluate(()=>{
 
 const hasil=[];
 
-document.querySelectorAll("*").forEach(el=>{
+const cards=document.querySelectorAll(
+'a[href*="/p/"]'
+);
 
-const text=el.innerText?.trim();
+cards.forEach(card=>{
+
+const text=card.innerText?.trim();
 
 if(!text) return;
 
-const lines=text
-.split("\n")
-.map(x=>x.trim())
-.filter(x=>x);
-
-const adaHarga=
-lines.some(
-x=>/Rp[\d\.]+/.test(x)
-);
-
-if(!adaHarga) return;
-
-const gabung=lines.join(" | ");
-
 if(
-gabung.includes("Masuk") ||
-gabung.includes("Daftar") ||
-gabung.includes("BlibliCare") ||
-gabung.includes("liveChat") ||
-gabung.includes("original")
+text.includes("Akan hadir")
+||
+text.includes("Besok")
+||
+text.includes("Peringat")
 ){
 return;
 }
 
-hasil.push(gabung);
-
-});
-
-return [...new Set(hasil)].slice(0,30);
-
-});
-
-console.log("=== DISKON GILA ===");
-
-products.forEach(item=>{
-console.log("----------------");
-console.log(item);
-});
-
-console.log("=== DISKON GILA ===");
-
-for(const item of products){
-
-let txt=item
-.replace(/\n/g," ")
-.replace(/\s+/g," ")
-.trim();
+if(
+text.includes("Rp??")
+){
+return;
+}
 
 if(
-txt.length<10 ||
-txt.length>300
+!text.match(/Rp[\d\.]+/)
 ){
-continue;
+return;
 }
 
-if(seen.has(txt)){
-continue;
-}
+hasil.push(
+text
+.replace(/\n/g," | ")
+.replace(/\s+/g," ")
+);
 
-seen.add(txt);
+});
+
+return [...new Set(hasil)]
+.slice(0,10);
+
+});
+
+console.log("");
+console.log("=== DISKON GILA ===");
+
+if(products.length===0){
+
+console.log(
+"Tidak ada produk ditemukan"
+);
+
+}else{
+
+products.forEach(item=>{
 
 console.log("----------------");
-console.log(txt);
+console.log(item);
+
+});
 
 }
+
+if(products.length){
+
+const pesan=
+"🔥 FLASH SALE BLIBLI 🔥\n\n"+
+products.join("\n\n");
+
+await bot.sendMessage(
+chatId,
+pesan
+);
+
+console.log(
+"Telegram terkirim"
+);
+
+}
+
+await browser.close();
+
 }catch(err){
 
 console.log(
@@ -116,9 +155,13 @@ console.log(
 err.message
 );
 
-}
+if(browser){
 
 await browser.close();
+
+}
+
+}
 
 }
 
@@ -128,10 +171,12 @@ while(true){
 
 await checkFlashsale();
 
-console.log("Sleep 60 detik...");
+console.log(
+"Sleep 60 detik..."
+);
 
-await new Promise(
-r=>setTimeout(r,60000)
+await sleep(
+60000
 );
 
 }

@@ -11,7 +11,13 @@ polling:false
 const chatId=process.env.CHAT_ID;
 
 async function sleep(ms){
-return new Promise(r=>setTimeout(r,ms));
+
+return new Promise(resolve=>{
+
+setTimeout(resolve,ms);
+
+});
+
 }
 
 async function checkFlashsale(){
@@ -55,7 +61,9 @@ timeout:60000
 }
 );
 
-await page.waitForTimeout(15000);
+await page.waitForTimeout(
+15000
+);
 
 console.log(
 "Title:",
@@ -66,25 +74,36 @@ const products=await page.evaluate(()=>{
 
 const hasil=[];
 
+
+/*
+ambil card produk flashsale
+*/
+
 const cards=document.querySelectorAll(
-'a[href*="/p/"]'
+".b-flashsale-section__product"
 );
+
 
 cards.forEach(card=>{
 
-const txt=
+const text=
 card.innerText || "";
 
 if(
-txt.includes("Akan hadir") ||
-txt.includes("Besok") ||
-txt.includes("Peringat")
+text.includes("Akan hadir") ||
+text.includes("Besok") ||
+text.includes("Peringat")
 ){
 return;
 }
 
+
+/*
+ambil harga
+*/
+
 const harga=
-txt.match(
+text.match(
 /Rp[\d\.]+/
 )?.[0];
 
@@ -92,24 +111,33 @@ if(!harga) return;
 
 
 /*
-ambil diskon dari semua isi card
+ambil diskon dari ribbon
 */
+
+const ribbon=
+card.querySelector(
+".els-ribbon__content span"
+);
 
 let diskon=0;
 
-const persen=
-txt.match(
-/(\d+)%/
-);
-
 if(
-persen
+ribbon
 ){
+
 diskon=
 parseInt(
-persen[1]
+ribbon.innerText
+.replace("%","")
+.trim()
 );
+
 }
+
+
+/*
+hanya 70%+
+*/
 
 if(
 diskon<70
@@ -117,8 +145,15 @@ diskon<70
 return;
 }
 
+
+/*
+ambil link produk
+*/
+
 let link=
-card.href;
+card.querySelector(
+'a[href*="/p/"]'
+)?.href || "";
 
 if(
 link &&

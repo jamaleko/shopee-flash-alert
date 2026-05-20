@@ -1,87 +1,88 @@
 const { chromium } = require("playwright");
 
 async function checkFlashsale() {
-  const browser = await chromium.launch({
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-blink-features=AutomationControlled"
+
+const browser = await chromium.launch({
+    headless:true,
+    args:[
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-blink-features=AutomationControlled"
     ]
-  });
+});
 
-  const context = await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+const context=await browser.newContext({
+userAgent:
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136 Safari/537.36",
 
-    viewport: {
-      width: 1366,
-      height: 768
-    },
+viewport:{
+width:1366,
+height:768
+}
+});
 
-    locale: "id-ID"
-  });
+const page=await context.newPage();
 
-  const page = await context.newPage();
+try{
 
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "webdriver", {
-      get: () => false
-    });
-  });
+console.log("Buka flashsale...");
 
-  try {
-    console.log("Buka flashsale...");
+await page.goto(
+"https://www.blibli.com/flashsale",
+{
+waitUntil:"domcontentloaded",
+timeout:60000
+}
+);
 
-    await page.goto(
-      "https://www.blibli.com/flashsale",
-      {
-        waitUntil: "domcontentloaded",
-        timeout: 60000
-      }
-    );
+await page.waitForTimeout(10000);
 
-    // kasih waktu JS halaman bekerja
-    await page.waitForTimeout(10000);
+console.log(
+"Title:",
+await page.title()
+);
 
-    console.log(
-      "URL:",
-      page.url()
-    );
+const text=await page.locator("body").innerText();
 
-    console.log(
-      "Title:",
-      await page.title()
-    );
+console.log(
+"================ HASIL ================="
+);
 
-    const html = await page.content();
+console.log(
+text.substring(0,3000)
+);
 
-    console.log(
-      html.substring(0,1000)
-    );
+console.log(
+"======================================="
+);
 
-  } catch(err) {
-    console.log("ERROR:");
-    console.log(err.message);
-  }
+}catch(err){
 
-  await browser.close();
+console.log(
+"ERROR:",
+err.message
+);
+
+}
+
+await browser.close();
+
 }
 
 (async()=>{
 
 while(true){
 
-  await checkFlashsale();
+await checkFlashsale();
 
-  console.log(
-    "Sleep 60 detik..."
-  );
+console.log(
+"Sleep 60 detik..."
+);
 
-  await new Promise(
-    r=>setTimeout(r,60000)
-  );
+await new Promise(
+r=>setTimeout(r,60000)
+);
 
 }
 

@@ -1,9 +1,7 @@
 {
-  "name":"blibli-test",
-  "dependencies":{
-    "playwright":"latest"
-  },
-  "scripts":{
-    "start":"node index.js"
-  }
+"name":"blibli-bot",
+"dependencies":{
+"playwright":"latest",
+"node-telegram-bot-api":"latest"
+}
 }

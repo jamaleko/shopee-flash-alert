@@ -19,7 +19,7 @@ r=>setTimeout(r,ms)
 
 async function checkFlashsale(){
 
-let browser = null;
+let browser=null;
 
 try{
 
@@ -31,8 +31,7 @@ headless:true,
 args:[
 "--no-sandbox",
 "--disable-setuid-sandbox",
-"--disable-dev-shm-usage",
-"--disable-blink-features=AutomationControlled"
+"--disable-dev-shm-usage"
 ]
 
 });
@@ -58,7 +57,7 @@ await page.goto(
 "https://www.blibli.com/flashsale",
 {
 waitUntil:"domcontentloaded",
-timeout:90000
+timeout:60000
 }
 );
 
@@ -66,44 +65,37 @@ console.log(
 "Halaman terbuka"
 );
 
+/*
+jangan lama-lama
+*/
+
 await page.waitForTimeout(
-20000
+10000
 );
 
 /*
-scroll banyak
+scroll sedikit saja
 */
-
-for(let i=0;i<10;i++){
 
 await page.mouse.wheel(
 0,
-2500
-);
-
-console.log(
-"Scroll",
-i+1
+1200
 );
 
 await page.waitForTimeout(
-3000
+4000
 );
-
-}
 
 console.log(
 "Title:",
 await page.title()
 );
 
-/*
-AMBIL SEMUA LINK PRODUK
-*/
-
 const products =
 await page.$$eval(
+
 'a[href*="/p/"]',
+
 els=>{
 
 const hasil=[];
@@ -115,18 +107,18 @@ el.innerText?.trim();
 
 if(!text) return;
 
-if(
-text.includes("Masuk") ||
-text.includes("Daftar") ||
-text.includes("Kategori")
-){
-return;
-}
+/*
+harus ada harga
+*/
 
 const hargaMatch =
 text.match(/Rp[\d\.]+/);
 
 if(!hargaMatch) return;
+
+/*
+pecah text
+*/
 
 const lines =
 text
@@ -134,7 +126,7 @@ text
 .map(x=>x.trim())
 .filter(Boolean);
 
-let nama = "Produk";
+let nama="Produk";
 
 for(const line of lines){
 
@@ -147,7 +139,7 @@ line.length > 5 &&
 
 ){
 
-nama = line;
+nama=line;
 break;
 
 }
@@ -167,6 +159,10 @@ el.href.split("?")[0]
 
 });
 
+/*
+hapus duplikat
+*/
+
 return [...new Map(
 
 hasil.map(
@@ -181,6 +177,7 @@ x
 .slice(0,10);
 
 }
+
 );
 
 console.log("");

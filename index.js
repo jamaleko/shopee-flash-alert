@@ -3,7 +3,7 @@ const TelegramBot = require("node-telegram-bot-api");
 
 const bot = new TelegramBot(
 process.env.BOT_TOKEN,
-{polling:false}
+{ polling:false }
 );
 
 const chatId=process.env.CHAT_ID;
@@ -60,57 +60,75 @@ console.log(
 await page.title()
 );
 
+await page.mouse.wheel(0,1200);
+
+await page.waitForTimeout(
+5000
+);
+
 const products=await page.evaluate(()=>{
 
 const hasil=[];
 
-const cards=document.querySelectorAll(
-'a[href*="/p/"]'
+const links=document.querySelectorAll(
+'a[href]'
 );
 
-cards.forEach(card=>{
+links.forEach(item=>{
 
-const text=card.innerText?.trim();
+const text=item.innerText?.trim();
 
 if(!text) return;
 
 if(
-text.includes("Akan hadir")
-||
-text.includes("Besok")
-||
-text.includes("Peringat")
-){
-return;
-}
-
-if(
+text.includes("Akan hadir")||
+text.includes("Besok")||
+text.includes("Peringat")||
 text.includes("Rp??")
 ){
 return;
 }
 
+const harga=text.match(
+/Rp[\d\.]+/g
+);
+
+if(!harga) return;
+
+const link=item.href;
+
 if(
-!text.match(/Rp[\d\.]+/)
+!link.includes("/p/")
 ){
 return;
 }
 
-hasil.push(
-text
-.replace(/\n/g," | ")
-.replace(/\s+/g," ")
-);
+hasil.push({
+
+harga:harga[0],
+
+link:link.split("?")[0]
 
 });
 
-return [...new Set(hasil)]
+});
+
+return [...new Map(
+hasil.map(
+item=>[
+item.link,
+item
+]
+)
+).values()]
 .slice(0,10);
 
 });
 
 console.log("");
-console.log("=== DISKON GILA ===");
+console.log(
+"=== FLASH SALE ==="
+);
 
 if(products.length===0){
 
@@ -122,18 +140,29 @@ console.log(
 
 products.forEach(item=>{
 
-console.log("----------------");
-console.log(item);
+console.log(
+item.harga
+);
+
+console.log(
+item.link
+);
+
+console.log(
+"---------------"
+);
 
 });
 
-}
+let pesan=
+"🔥 FLASH SALE BLIBLI 🔥\n\n";
 
-if(products.length){
+products.forEach(item=>{
 
-const pesan=
-"🔥 FLASH SALE BLIBLI 🔥\n\n"+
-products.join("\n\n");
+pesan+=
+`${item.harga}\n${item.link}\n\n`;
+
+});
 
 await bot.sendMessage(
 chatId,
@@ -172,7 +201,7 @@ while(true){
 await checkFlashsale();
 
 console.log(
-"Sleep 60 detik..."
+"Sleep..."
 );
 
 await sleep(

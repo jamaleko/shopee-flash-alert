@@ -1,6 +1,8 @@
 const { chromium } = require("playwright");
 
 (async () => {
+    console.log("Playwright OK");
+
     const browser = await chromium.launch({
         headless: true,
         args: [
@@ -9,18 +11,9 @@ const { chromium } = require("playwright");
         ]
     });
 
-    const page = await browser.newPage();
-
-    await page.goto("https://www.blibli.com", {
-        waitUntil: "networkidle"
-    });
-
-    console.log(await page.title());
-
-    await page.screenshot({
-        path: "debug.png",
-        fullPage: true
-    });
+    console.log("Browser OK");
 
     await browser.close();
+
+    setInterval(()=>{},1000);
 })();

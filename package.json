@@ -1,10 +1,9 @@
 {
-"name":"blibli-bot",
-"dependencies":{
-"playwright":"latest",
-"node-telegram-bot-api":"latest"
-},
-"scripts":{
-"start":"node index.js"
-}
+  "name":"blibli-flashsale",
+  "version":"1.0.0",
+  "main":"index.js",
+  "dependencies":{
+    "axios":"^1.8.0",
+    "puppeteer":"^24.0.0"
+  }
 }

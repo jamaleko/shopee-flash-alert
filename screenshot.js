@@ -13,7 +13,7 @@ let browser;
 try{
 
 browser=
-await chromium.connect(
+await chromium.connectOverCDP(
 `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
 );
 

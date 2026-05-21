@@ -33,8 +33,8 @@ for(const item of items){
 
 console.log(
 ${item.name}
-Harga: ${item.offer}
-Sisa: ${item.remaining}
+Harga: ${item.price.offer}
+Sisa: ${item.inventory.remaining}
 
 );
 

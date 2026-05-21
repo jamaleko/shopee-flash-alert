@@ -8,13 +8,28 @@ r=>setTimeout(r,ms)
 
 async function test(){
 
-let browser;
+let browser=null;
 
 try{
 
+console.log(
+"Token:",
+process.env.BROWSERLESS_TOKEN
+? "ADA"
+: "KOSONG"
+);
+
+console.log(
+"Connect browserless..."
+);
+
 browser=
 await chromium.connect(
-`wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
+wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}
+);
+
+console.log(
+"Browser connected"
 );
 
 const page=
@@ -24,17 +39,38 @@ console.log(
 "Buka blibli..."
 );
 
+const response=
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
-waitUntil:"networkidle",
+waitUntil:"domcontentloaded",
 timeout:120000
 }
 );
 
 console.log(
+"Status:",
+response?.status()
+);
+
+console.log(
+"Tunggu render..."
+);
+
+await page.waitForTimeout(
+15000
+);
+
+const title=
+await page.title();
+
+console.log(
 "Title:",
-await page.title()
+title
+);
+
+console.log(
+"Screenshot..."
 );
 
 await page.screenshot({
@@ -42,14 +78,21 @@ path:"hasil.png"
 });
 
 console.log(
-"Screenshot selesai"
+"Selesai screenshot"
 );
 
 }catch(e){
 
 console.log(
-"ERROR:",
+"ERROR:"
+);
+
+console.log(
 e.message
+);
+
+console.log(
+e.stack
 );
 
 }finally{
@@ -57,6 +100,10 @@ e.message
 if(browser){
 
 await browser.close();
+
+console.log(
+"Browser close"
+);
 
 }
 

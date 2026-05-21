@@ -78,7 +78,19 @@ console.log(
 );
 
 /*
-scroll kecil supaya lazy load jalan
+biarkan JS render sendiri
+*/
+
+console.log(
+"Tunggu render..."
+);
+
+await page.waitForTimeout(
+30000
+);
+
+/*
+scroll pelan
 */
 
 for(let i=0;i<3;i++){
@@ -94,50 +106,15 @@ await page.waitForTimeout(
 
 }
 
-/*
-tunggu maksimal 60 detik
-sampai skeleton hilang
-*/
-
-for(let i=0;i<12;i++){
-
-const body=
-await page.evaluate(
-()=>document.body.innerText
-);
-
 console.log(
-"Cek:",
-i
+"Screenshot..."
 );
-
-if(
-
-body.includes("Rp")
-  
-){
-
-console.log(
-"Produk muncul!"
-);
-
-break;
-
-}
-
-await page.waitForTimeout(
-5000
-);
-
-}
-
-/*
-screenshot akhir
-*/
 
 await page.screenshot({
 
 path:"hasil.png",
+
+fullPage:false,
 
 timeout:0
 
@@ -152,7 +129,7 @@ chatId,
 {
 
 caption:
-"Hasil cek produk"
+"Tes blibli"
 
 }
 

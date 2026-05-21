@@ -11,15 +11,10 @@ polling:false
 const chatId=
 process.env.CHAT_ID;
 
-/*
-supaya produk yg sama
-tidak dikirim terus
-*/
-
 const sentProducts=
 new Set();
 
-async function sleep(ms){
+function sleep(ms){
 
 return new Promise(
 r=>setTimeout(r,ms)
@@ -79,11 +74,8 @@ items.length
 );
 
 const promo=
-items.filter(item=>
-
-item?.name &&
-item?.price?.discount>=50
-
+items.filter(
+x=>x?.price?.discount>=70
 );
 
 console.log(
@@ -91,40 +83,28 @@ console.log(
 promo.length
 );
 
-if(
-promo.length===0
-){
-
-console.log(
-"Tidak ada promo"
-);
-
-return;
-
-}
-
 for(
 const item of promo
 ){
 
-const id=
-item.sku;
-
 if(
-sentProducts.has(id)
+sentProducts.has(item.sku)
 ){
 
 continue;
-
 }
 
 sentProducts.add(
-id
+item.sku
 );
 
-const pesan=
+console.log(
+"Kirim:",
+item.name
+);
 
-`🔥 FLASH SALE BLIBLI 🔥
+const msg=
+`🔥 FLASH SALE
 
 📦 ${item.name}
 
@@ -138,18 +118,12 @@ ${item.price.offer}
 ${item.price.discount}%
 
 📦 Sisa:
-${item.inventory?.remaining || "-"}
-
-🔗 https://www.blibli.com${item.url}
+${item.inventory?.remaining||"-"}
 `;
-
-console.log(
-item.name
-);
 
 await bot.sendMessage(
 chatId,
-pesan
+msg
 );
 
 console.log(
@@ -158,14 +132,17 @@ console.log(
 
 }
 
+return true;
+
 }
 catch(e){
 
 console.log(
 "ERROR:",
-e.response?.status ||
-e.message
+e.response?.status || e.message
 );
+
+return false;
 
 }
 
@@ -175,7 +152,14 @@ e.message
 
 while(true){
 
+const success=
 await cekFlashSale();
+
+if(success){
+
+console.log(
+"Semua selesai"
+);
 
 console.log(
 "Sleep 5 menit..."
@@ -184,6 +168,19 @@ console.log(
 await sleep(
 300000
 );
+
+}
+else{
+
+console.log(
+"Retry 30 detik..."
+);
+
+await sleep(
+30000
+);
+
+}
 
 }
 

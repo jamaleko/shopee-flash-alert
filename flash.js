@@ -57,7 +57,7 @@ headers:{
 '"Not_A Brand";v="99","Google Chrome";v="109","Chromium";v="109"',
 
 "sec-ch-ua-mobile":
-"?1',
+"?1",
 
 "sec-ch-ua-platform":
 '"Android"',

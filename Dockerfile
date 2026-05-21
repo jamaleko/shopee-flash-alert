@@ -8,4 +8,4 @@ RUN npm install
 
 COPY . .
 
-CMD ["node","screenshot.js"]
+CMD ["node","flash.js"]

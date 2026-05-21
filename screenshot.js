@@ -6,14 +6,7 @@ let browser;
 
 try{
 
-console.log(
-"Token:",
-process.env.BROWSERLESS_TOKEN?.slice(0,5)
-);
-
-console.log(
-"Connect..."
-);
+console.log("Connect...");
 
 browser=
 await chromium.connectOverCDP(
@@ -24,21 +17,64 @@ console.log(
 "CONNECTED OK"
 );
 
-const contexts=
-browser.contexts();
+const page=
+await browser.newPage();
+
+page.on(
+"response",
+res=>{
+
+if(
+res.url().includes(
+"blibli"
+)
+){
 
 console.log(
-"Context:",
-contexts.length
+"API:",
+res.status(),
+res.url()
+);
+
+}
+
+}
+);
+
+console.log(
+"Buka blibli..."
+);
+
+await page.goto(
+"https://www.blibli.com/flashsale",
+{
+waitUntil:"domcontentloaded",
+timeout:120000
+}
+);
+
+await page.waitForTimeout(
+15000
+);
+
+console.log(
+"Title:",
+await page.title()
+);
+
+await page.screenshot({
+path:"hasil.png",
+fullPage:true
+});
+
+console.log(
+"Screenshot selesai"
 );
 
 }catch(e){
 
 console.log(
-"ERROR:"
-);
-
-console.log(
+"ERROR:",
 e.message
 );
 
@@ -56,7 +92,5 @@ console.log(
 }
 
 }
-
-process.exit(0);
 
 })();

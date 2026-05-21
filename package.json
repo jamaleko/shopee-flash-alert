@@ -1,9 +1,9 @@
 {
-  "name":"blibli-monitor",
+  "name":"shopee-flash-alert",
   "version":"1.0.0",
-  "main":"index.js",
   "scripts":{
-    "start":"node index.js"
+    "start":"node index.js",
+    "ss":"node screenshot.js"
   },
   "dependencies":{
     "playwright":"^1.52.0",

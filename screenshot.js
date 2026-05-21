@@ -20,12 +20,24 @@ await chromium.launch({
 
 headless:true,
 
+proxy:{
+
+server:
+process.env.PROXY_SERVER,
+
+username:
+process.env.PROXY_USER,
+
+password:
+process.env.PROXY_PASS
+
+},
+
 args:[
 
 "--no-sandbox",
 "--disable-setuid-sandbox",
-"--disable-dev-shm-usage",
-"--disable-gpu"
+"--disable-dev-shm-usage"
 
 ]
 
@@ -35,16 +47,17 @@ const page=
 await browser.newPage({
 
 viewport:{
+width:1366,
+height:768
+},
 
-width:800,
-height:600
-
-}
+userAgent:
+"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/136.0 Safari/537.36"
 
 });
 
 console.log(
-"Buka halaman..."
+"Buka blibli..."
 );
 
 await page.goto(
@@ -60,65 +73,29 @@ timeout:60000
 
 );
 
-console.log(
-"Halaman terbuka"
-);
-
 await page.waitForTimeout(
-3000
+10000
 );
+
+const body=
+await page.locator(
+"body"
+).textContent();
 
 console.log(
-"Ambil screenshot..."
+body.substring(0,500)
 );
 
-/*
-pakai CDP langsung
-bukan page.screenshot()
-*/
-
-const client=
-await page.context()
-.newCDPSession(page);
-
-const result=
-await client.send(
-"Page.captureScreenshot",
-{
-
-format:"png"
-
-}
-);
-
-const buffer=
-Buffer.from(
-result.data,
-"base64"
-);
-
-console.log(
-"Kirim telegram..."
-);
-
-await bot.sendPhoto(
+await bot.sendMessage(
 
 chatId,
 
-buffer,
-
-{
-
-caption:
-"📸 Screenshot test"
-
-}
+body.substring(0,3000)
 
 );
 
 console.log(
 "Selesai"
-
 );
 
 }catch(err){

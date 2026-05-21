@@ -24,7 +24,8 @@ args:[
 
 "--no-sandbox",
 "--disable-setuid-sandbox",
-"--disable-dev-shm-usage"
+"--disable-dev-shm-usage",
+"--disable-gpu"
 
 ]
 
@@ -35,13 +36,10 @@ await browser.newPage({
 
 viewport:{
 
-width:1366,
-height:768
+width:800,
+height:600
 
-},
-
-userAgent:
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0 Safari/537.36"
+}
 
 });
 
@@ -51,7 +49,7 @@ console.log(
 
 await page.goto(
 
-"https://www.blibli.com/flashsale",
+"https://www.tokopedia.com/discovery/deals",
 
 {
 
@@ -67,26 +65,37 @@ console.log(
 );
 
 await page.waitForTimeout(
-10000
+3000
 );
 
 console.log(
 "Ambil screenshot..."
 );
 
-const img=
+/*
+pakai CDP langsung
+bukan page.screenshot()
+*/
 
-await page.screenshot({
+const client=
+await page.context()
+.newCDPSession(page);
 
-type:"png",
+const result=
+await client.send(
+"Page.captureScreenshot",
+{
 
-fullPage:false,
+format:"png"
 
-animations:"disabled",
+}
+);
 
-timeout:5000
-
-});
+const buffer=
+Buffer.from(
+result.data,
+"base64"
+);
 
 console.log(
 "Kirim telegram..."
@@ -96,12 +105,12 @@ await bot.sendPhoto(
 
 chatId,
 
-img,
+buffer,
 
 {
 
 caption:
-"📸 Screenshot Tokopedia"
+"📸 Screenshot test"
 
 }
 

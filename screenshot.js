@@ -1,59 +1,50 @@
 const { chromium } = require("playwright");
 
-(async()=>{
+async function test(){
 
 const browser=
-await chromium.launch({
+await chromium.connect(
 
-headless:true,
+wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}
 
-proxy:{
-server:"http://p.webshare.io:80",
-username:process.env.PROXY_USER,
-password:process.env.PROXY_PASS
-}
-
-});
+);
 
 const page=
 await browser.newPage();
 
-page.on(
-"response",
-res=>{
-
-if(
-res.url().includes("blibli")
-){
-
 console.log(
-"STATUS:",
-res.status(),
-res.url()
-);
-
-}
-
-}
+"Buka blibli..."
 );
 
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
-waitUntil:"domcontentloaded",
-timeout:60000
+waitUntil:"networkidle",
+timeout:120000
 }
 );
 
 await page.waitForTimeout(
-5000
+10000
 );
 
 console.log(
-"TITLE:",
+"Title:",
 await page.title()
+);
+
+await page.screenshot({
+
+path:"hasil.png"
+
+});
+
+console.log(
+"Screenshot selesai"
 );
 
 await browser.close();
 
-})();
+}
+
+test();

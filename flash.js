@@ -1,7 +1,8 @@
-const axios = require("axios");
-const TelegramBot = require("node-telegram-bot-api");
+const axios=require("axios");
+const TelegramBot=require("node-telegram-bot-api");
 
-const bot = new TelegramBot(
+const bot=
+new TelegramBot(
 process.env.BOT_TOKEN,
 {
 polling:false
@@ -11,7 +12,7 @@ polling:false
 const chatId=
 process.env.CHAT_ID;
 
-const sentProducts=
+const sent=
 new Set();
 
 function sleep(ms){
@@ -34,6 +35,8 @@ const res=
 await axios.get(
 "https://www.blibli.com/backend/content/flashsale/v2/products",
 {
+timeout:30000,
+
 headers:{
 
 "Accept":
@@ -74,12 +77,19 @@ items.length
 );
 
 const promo=
-items.filter(
-x=>x?.price?.discount>=70
+items
+.filter(
+x=>
+x?.price?.discount>=70
+)
+.sort(
+(a,b)=>
+b.price.discount-
+a.price.discount
 );
 
 console.log(
-"Diskon >=50%:",
+"Diskon >=70%:",
 promo.length
 );
 
@@ -87,24 +97,36 @@ for(
 const item of promo
 ){
 
+const id=
+${item.sku}-${item.price.discount}-${item.price.offer};
+
 if(
-sentProducts.has(item.sku)
+sent.has(id)
 ){
 
 continue;
 }
 
-sentProducts.add(
-item.sku
-);
+sent.add(id);
 
 console.log(
 "Kirim:",
 item.name
 );
 
+let link=
+"https://www.blibli.com";
+
+if(
+item.url
+){
+
+link+=item.url;
+
+}
+
 const msg=
-`🔥 FLASH SALE
+`🔥 FLASH SALE BLIBLI 🔥
 
 📦 ${item.name}
 
@@ -119,6 +141,8 @@ ${item.price.discount}%
 
 📦 Sisa:
 ${item.inventory?.remaining||"-"}
+
+🔗 ${link}
 `;
 
 await bot.sendMessage(
@@ -139,7 +163,8 @@ catch(e){
 
 console.log(
 "ERROR:",
-e.response?.status || e.message
+e.response?.status||
+e.message
 );
 
 return false;
@@ -152,21 +177,21 @@ return false;
 
 while(true){
 
-const success=
+const ok=
 await cekFlashSale();
 
-if(success){
+if(ok){
 
 console.log(
 "Semua selesai"
 );
 
 console.log(
-"Sleep 5 menit..."
+"Sleep 30 menit..."
 );
 
 await sleep(
-300000
+1800000
 );
 
 }

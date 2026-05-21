@@ -1,69 +1,46 @@
-const { chromium } = require("playwright-extra");
-const StealthPlugin =
-require("puppeteer-extra-plugin-stealth");
-
-chromium.use(
-StealthPlugin()
-);
+const { chromium } = require("playwright");
 
 (async()=>{
 
-let browser;
-
-try{
-
-browser=
+const browser=
 await chromium.connectOverCDP(
 `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
-);
-
-console.log(
-"CONNECTED"
 );
 
 const page=
 await browser.newPage();
 
-await page.goto(
-"https://www.blibli.com/flashsale",
-{
-waitUntil:"domcontentloaded",
-timeout:120000
+page.on(
+"response",
+async(res)=>{
+
+const url=res.url();
+
+if(
+url.includes("flash") ||
+url.includes("product") ||
+url.includes("search")
+){
+
+console.log(
+"API:",
+res.status(),
+url
+);
+
 }
+
+}
+);
+
+await page.goto(
+"https://www.blibli.com/flashsale"
 );
 
 await page.waitForTimeout(
 15000
 );
 
-console.log(
-"Title:",
-await page.title()
-);
-
-await page.screenshot({
-path:"hasil.png",
-fullPage:true
-});
-
-console.log(
-"Screenshot selesai"
-);
-
-}catch(e){
-
-console.log(
-"ERROR:",
-e.message
-);
-
-}
-finally{
-
-if(browser){
 await browser.close();
-}
-
-}
 
 })();

@@ -49,15 +49,48 @@ await browser.newPage({
 viewport:{
 width:1366,
 height:768
-},
-
-userAgent:
-"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/136.0 Safari/537.36"
+}
 
 });
 
+/*
+log request gagal
+*/
+
+page.on(
+"requestfailed",
+req=>{
+
 console.log(
-"Buka blibli..."
+"FAILED:",
+req.url(),
+req.failure()?.errorText
+);
+
+}
+);
+
+page.on(
+"response",
+res=>{
+
+if(
+res.status()>=400
+){
+
+console.log(
+"STATUS:",
+res.status(),
+res.url()
+);
+
+}
+
+}
+);
+
+console.log(
+"Buka..."
 );
 
 await page.goto(
@@ -74,49 +107,16 @@ timeout:60000
 );
 
 console.log(
-"Halaman terbuka"
-);
-
-/*
-biarkan JS render sendiri
-*/
-
-console.log(
-"Tunggu render..."
+"Menunggu..."
 );
 
 await page.waitForTimeout(
-30000
-);
-
-/*
-scroll pelan
-*/
-
-for(let i=0;i<3;i++){
-
-await page.mouse.wheel(
-0,
-1000
-);
-
-await page.waitForTimeout(
-3000
-);
-
-}
-
-console.log(
-"Screenshot..."
+15000
 );
 
 await page.screenshot({
 
-path:"hasil.png",
-
-fullPage:false,
-
-timeout:0
+path:"hasil.png"
 
 });
 
@@ -129,7 +129,7 @@ chatId,
 {
 
 caption:
-"Tes blibli"
+"debug"
 
 }
 

@@ -51,7 +51,7 @@ console.log(
 
 await page.goto(
 
-"https://www.tokopedia.com/discovery/deals",
+"https://www.blibli.com/flashsale",
 
 {
 

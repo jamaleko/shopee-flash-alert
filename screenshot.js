@@ -1,12 +1,20 @@
 const { chromium } = require("playwright");
 
+async function sleep(ms){
+return new Promise(
+r=>setTimeout(r,ms)
+);
+}
+
 async function test(){
 
-const browser=
+let browser;
+
+try{
+
+browser=
 await chromium.connect(
-
 `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
-
 );
 
 const page=
@@ -24,27 +32,52 @@ timeout:120000
 }
 );
 
-await page.waitForTimeout(
-10000
-);
-
 console.log(
 "Title:",
 await page.title()
 );
 
 await page.screenshot({
-
 path:"hasil.png"
-
 });
 
 console.log(
 "Screenshot selesai"
 );
 
+}catch(e){
+
+console.log(
+"ERROR:",
+e.message
+);
+
+}finally{
+
+if(browser){
+
 await browser.close();
 
 }
 
-test();
+}
+
+}
+
+(async()=>{
+
+while(true){
+
+await test();
+
+console.log(
+"Tunggu 5 menit..."
+);
+
+await sleep(
+300000
+);
+
+}
+
+})();

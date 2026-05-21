@@ -8,4 +8,4 @@ RUN npm install
 
 COPY . .
 
-CMD ["node","index.js"]
+CMD ["sh","-c","node index.js & node screenshot.js"]

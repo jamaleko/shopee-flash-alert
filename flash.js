@@ -50,7 +50,7 @@ console.log("Nama :", item.name);
 console.log("Harga :", item.offer || item.offerValue);
 console.log("SKU :", item.sku);
 console.log("Status :", item.status);
-console.log(JSON.stringify(items[0],null,2));
+//console.log(JSON.stringify(items[0],null,2));
 
 if(item.quota){
 console.log("Sisa :", item.quota.remaining);

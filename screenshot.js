@@ -6,10 +6,20 @@ let browser;
 
 try{
 
-console.log("Connect browserless...");
+console.log("Token:",
+process.env.BROWSERLESS_TOKEN?.slice(0,5));
 
-browser=await chromium.connect(
+console.log(
+"Connect browserless..."
+);
+
+browser=
+await chromium.connect(
 `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
+);
+
+console.log(
+"Connected!"
 );
 
 const context=
@@ -24,66 +34,37 @@ height:768
 },
 
 locale:"id-ID",
-
 timezoneId:"Asia/Jakarta"
 });
 
+console.log(
+"Context dibuat"
+);
+
 const page=
 await context.newPage();
+
+console.log(
+"Page dibuat"
+);
 
 await page.addInitScript(()=>{
 
 Object.defineProperty(
 navigator,
-"webdriver",
+'webdriver',
 {
 get:()=>false
 }
 );
 
-Object.defineProperty(
-navigator,
-"platform",
-{
-get:()=> "Win32"
-}
-);
-
-Object.defineProperty(
-navigator,
-"languages",
-{
-get:()=>["id-ID","id"]
-}
-);
-
 });
-
-page.on(
-"response",
-r=>{
-
-if(
-r.url().includes(
-"flashsale"
-)
-){
-
-console.log(
-"API:",
-r.status(),
-r.url()
-);
-
-}
-
-}
-);
 
 console.log(
 "Buka blibli..."
 );
 
+const response=
 await page.goto(
 "https://www.blibli.com/flashsale",
 {
@@ -93,7 +74,12 @@ timeout:120000
 );
 
 console.log(
-"Menunggu..."
+"Status:",
+response?.status()
+);
+
+console.log(
+"Tunggu render..."
 );
 
 await page.waitForTimeout(
@@ -105,24 +91,37 @@ console.log(
 await page.title()
 );
 
+console.log(
+"Screenshot..."
+);
+
 await page.screenshot({
-path:"hasil.png"
+
+path:"hasil.png",
+fullPage:true
+
 });
 
 console.log(
-"Selesai"
+"Screenshot selesai"
 );
 
-}catch(e){
+}
+catch(e){
 
 console.log(
 "ERROR:",
 e.message
 );
 
-}finally{
+}
+finally{
 
 if(browser){
+
+console.log(
+"Browser close"
+);
 
 await browser.close();
 
@@ -132,4 +131,8 @@ await browser.close();
 
 }
 
-test();
+(async()=>{
+
+await test();
+
+})();

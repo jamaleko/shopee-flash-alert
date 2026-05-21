@@ -124,7 +124,7 @@ id
 
 const pesan=
 
-🔥 FLASH SALE BLIBLI 🔥
+`🔥 FLASH SALE BLIBLI 🔥
 
 📦 ${item.name}
 
@@ -141,7 +141,7 @@ ${item.price.discount}%
 ${item.inventory?.remaining || "-"}
 
 🔗 https://www.blibli.com${item.url}
-;
+`;
 
 console.log(
 item.name

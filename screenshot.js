@@ -1,4 +1,10 @@
-const { chromium } = require("playwright");
+const { chromium } = require("playwright-extra");
+const StealthPlugin =
+require("playwright-extra-plugin-stealth");
+
+chromium.use(
+StealthPlugin()
+);
 
 (async()=>{
 
@@ -6,44 +12,21 @@ let browser;
 
 try{
 
-console.log("Connect...");
-
 browser=
-await chromium.connectOverCDP(
+await chromium.connect(
 `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
 );
 
 console.log(
-"CONNECTED OK"
+"CONNECTED"
 );
 
 const page=
 await browser.newPage();
 
-page.on(
-"response",
-res=>{
-
-if(
-res.url().includes(
-"blibli"
-)
-){
-
-console.log(
-"API:",
-res.status(),
-res.url()
-);
-
-}
-
-}
-);
-
-console.log(
-"Buka blibli..."
-);
+await page.setExtraHTTPHeaders({
+"accept-language":"id-ID,id;q=0.9,en;q=0.8"
+});
 
 await page.goto(
 "https://www.blibli.com/flashsale",
@@ -67,10 +50,6 @@ path:"hasil.png",
 fullPage:true
 });
 
-console.log(
-"Screenshot selesai"
-);
-
 }catch(e){
 
 console.log(
@@ -84,10 +63,6 @@ finally{
 if(browser){
 
 await browser.close();
-
-console.log(
-"Closed"
-);
 
 }
 

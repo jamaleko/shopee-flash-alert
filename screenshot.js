@@ -24,16 +24,37 @@ console.log(
 );
 
 browser=
-await chromium.connect(
+await chromium.connectOverCDP(
 `wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
 );
 
 console.log(
-"Browser connected"
+"Connected!"
 );
 
+/*
+ambil browser context pertama
+*/
+
+const contexts=
+browser.contexts();
+
+let context;
+
+if(contexts.length>0){
+
+context=
+contexts[0];
+
+}else{
+
+context=
+await browser.newContext();
+
+}
+
 const page=
-await browser.newPage();
+await context.newPage();
 
 console.log(
 "Buka blibli..."
@@ -61,12 +82,9 @@ await page.waitForTimeout(
 15000
 );
 
-const title=
-await page.title();
-
 console.log(
 "Title:",
-title
+await page.title()
 );
 
 console.log(
@@ -74,11 +92,15 @@ console.log(
 );
 
 await page.screenshot({
-path:"hasil.png"
+
+path:"hasil.png",
+
+fullPage:true
+
 });
 
 console.log(
-"Selesai screenshot"
+"Screenshot selesai"
 );
 
 }catch(e){
@@ -91,9 +113,13 @@ console.log(
 e.message
 );
 
+if(e.stack){
+
 console.log(
 e.stack
 );
+
+}
 
 }finally{
 

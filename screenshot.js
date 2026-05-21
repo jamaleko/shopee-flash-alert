@@ -25,7 +25,7 @@ console.log(
 
 browser=
 await chromium.connect(
-wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}
+`wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
 );
 
 console.log(

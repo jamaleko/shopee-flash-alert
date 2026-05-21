@@ -1,9 +1,9 @@
 const { chromium } = require("playwright");
 const TelegramBot = require("node-telegram-bot-api");
 
-const bot = new TelegramBot(
+const bot=new TelegramBot(
 process.env.BOT_TOKEN,
-{ polling:false }
+{polling:false}
 );
 
 const chatId=
@@ -77,27 +77,71 @@ console.log(
 "Halaman terbuka"
 );
 
+/*
+scroll kecil supaya lazy load jalan
+*/
+
+for(let i=0;i<3;i++){
+
+await page.mouse.wheel(
+0,
+1000
+);
+
 await page.waitForTimeout(
-10000
+3000
+);
+
+}
+
+/*
+tunggu maksimal 60 detik
+sampai skeleton hilang
+*/
+
+for(let i=0;i<12;i++){
+
+const body=
+await page.evaluate(
+()=>document.body.innerText
 );
 
 console.log(
-"Ambil screenshot..."
+"Cek:",
+i
 );
+
+if(
+
+body.includes("Rp")
+  
+){
+
+console.log(
+"Produk muncul!"
+);
+
+break;
+
+}
+
+await page.waitForTimeout(
+5000
+);
+
+}
+
+/*
+screenshot akhir
+*/
 
 await page.screenshot({
 
 path:"hasil.png",
 
-fullPage:false,
-
 timeout:0
 
 });
-
-console.log(
-"Kirim telegram..."
-);
 
 await bot.sendPhoto(
 
@@ -108,7 +152,7 @@ chatId,
 {
 
 caption:
-"Test proxy blibli"
+"Hasil cek produk"
 
 }
 
@@ -116,7 +160,6 @@ caption:
 
 console.log(
 "Selesai"
-
 );
 
 }catch(err){

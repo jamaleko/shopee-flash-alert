@@ -98,7 +98,7 @@ const item of promo
 ){
 
 const id=
-${item.sku}-${item.price.discount}-${item.price.offer};
+`${item.sku}-${item.price.discount}-${item.price.offer}`;
 
 if(
 sent.has(id)

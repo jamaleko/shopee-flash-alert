@@ -73,29 +73,50 @@ timeout:60000
 
 );
 
+console.log(
+"Halaman terbuka"
+);
+
 await page.waitForTimeout(
 10000
 );
 
-const body=
-await page.locator(
-"body"
-).textContent();
-
 console.log(
-body.substring(0,500)
+"Ambil screenshot..."
 );
 
-await bot.sendMessage(
+await page.screenshot({
+
+path:"hasil.png",
+
+fullPage:false,
+
+timeout:0
+
+});
+
+console.log(
+"Kirim telegram..."
+);
+
+await bot.sendPhoto(
 
 chatId,
 
-body.substring(0,3000)
+"hasil.png",
+
+{
+
+caption:
+"Test proxy blibli"
+
+}
 
 );
 
 console.log(
 "Selesai"
+
 );
 
 }catch(err){

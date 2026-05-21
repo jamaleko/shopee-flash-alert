@@ -30,7 +30,6 @@ headers: {
 "sec-ch-ua-platform":
 '"Android"',
 
-// tempel seluruh cookie browser milikmu sendiri
 "Cookie":
 process.env.BLIBLI_COOKIE
 }
@@ -38,15 +37,26 @@ process.env.BLIBLI_COOKIE
 }
 );
 
-console.log(
-"Jumlah:",
-res.data.data.length
-);
+const items = res.data.data;
 
-console.log(
-"Produk pertama:",
-res.data.data[0].name
-);
+console.log("Jumlah:", items.length);
+
+for(let i=0;i<items.length;i++){
+
+const item=items[i];
+
+console.log("==============");
+console.log("Nama :", item.name);
+console.log("Harga :", item.offer || item.offerValue);
+console.log("SKU :", item.sku);
+console.log("Status :", item.status);
+console.log(JSON.stringify(items[0],null,2));
+
+if(item.quota){
+console.log("Sisa :", item.quota.remaining);
+}
+
+}
 
 } catch(e){
 

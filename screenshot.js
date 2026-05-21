@@ -1,49 +1,49 @@
-const { chromium } = require("playwright");
+const axios=require("axios");
 
-(async()=>{
+async function test(){
 
-const browser=
-await chromium.launch({
-headless:true
-});
+const urls=[
 
-const page=
-await browser.newPage();
+"https://www.blibli.com/backend/search/products",
 
-page.on(
-"response",
-async(res)=>{
+"https://www.blibli.com/backend/product",
 
-const url=res.url();
+"https://api.blibli.com",
 
-if(
-url.includes("api")||
-url.includes("flash")||
-url.includes("product")
-){
+"https://www.blibli.com/backend/flashsale"
+
+];
+
+for(const url of urls){
+
+try{
+
+const r=
+await axios.get(
+url,
+{
+timeout:10000,
+validateStatus:()=>true
+}
+);
 
 console.log(
-"API:",
-res.status(),
-url
+url,
+"status:",
+r.status
+);
+
+}catch(e){
+
+console.log(
+url,
+"error"
 );
 
 }
 
 }
-);
 
-await page.goto(
-"https://www.blibli.com/flashsale",
-{
-waitUntil:"domcontentloaded"
 }
-);
 
-await page.waitForTimeout(
-30000
-);
-
-await browser.close();
-
-})();
+test();

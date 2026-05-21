@@ -31,12 +31,12 @@ const items=await getFlashSale();
 
 for(const item of items){
 
-console.log(
+console.log(`
 ${item.name}
 Harga: ${item.price.offer}
 Sisa: ${item.inventory.remaining}
 
-);
+`);
 
 }
 

@@ -8,11 +8,9 @@ await chromium.launch({
 headless:true,
 
 proxy:{
-
-server:process.env.PROXY_SERVER,
+server:"http://p.webshare.io:80",
 username:process.env.PROXY_USER,
 password:process.env.PROXY_PASS
-
 }
 
 });
@@ -20,16 +18,40 @@ password:process.env.PROXY_PASS
 const page=
 await browser.newPage();
 
-await page.goto(
-"https://api.ipify.org"
-);
+page.on(
+"response",
+res=>{
 
-const ip=
-await page.textContent("body");
+if(
+res.url().includes("blibli")
+){
 
 console.log(
-"IP:",
-ip
+"STATUS:",
+res.status(),
+res.url()
+);
+
+}
+
+}
+);
+
+await page.goto(
+"https://www.blibli.com/flashsale",
+{
+waitUntil:"domcontentloaded",
+timeout:60000
+}
+);
+
+await page.waitForTimeout(
+5000
+);
+
+console.log(
+"TITLE:",
+await page.title()
 );
 
 await browser.close();

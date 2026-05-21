@@ -17,9 +17,7 @@ async(res)=>{
 const url=res.url();
 
 if(
-url.includes("flash") ||
-url.includes("product") ||
-url.includes("search")
+url.includes("blibli")
 ){
 
 console.log(

@@ -1,6 +1,6 @@
 const { chromium } = require("playwright-extra");
 const StealthPlugin =
-require("playwright-extra-plugin-stealth");
+require("puppeteer-extra-plugin-stealth");
 
 chromium.use(
 StealthPlugin()
@@ -14,7 +14,7 @@ try{
 
 browser=
 await chromium.connect(
-`wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
+wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}
 );
 
 console.log(
@@ -23,10 +23,6 @@ console.log(
 
 const page=
 await browser.newPage();
-
-await page.setExtraHTTPHeaders({
-"accept-language":"id-ID,id;q=0.9,en;q=0.8"
-});
 
 await page.goto(
 "https://www.blibli.com/flashsale",
@@ -50,6 +46,10 @@ path:"hasil.png",
 fullPage:true
 });
 
+console.log(
+"Screenshot selesai"
+);
+
 }catch(e){
 
 console.log(
@@ -61,9 +61,7 @@ e.message
 finally{
 
 if(browser){
-
 await browser.close();
-
 }
 
 }

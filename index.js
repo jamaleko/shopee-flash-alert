@@ -166,7 +166,9 @@ products.length
 );
 
 for(const p of products){
+const link=
 
+`https://www.tokopedia.com/-/p/${p.product_id}`;
 const harga=
 parseInt(
 p.price
@@ -218,7 +220,10 @@ console.log(
 "Rating:",
 p.rating_average
 );
-
+console.log(
+"Link:",
+link
+);
 const pesan=
 
 `🔥 TOKOPEDIA
@@ -228,7 +233,8 @@ ${p.name}
 💰 Harga: ${p.price}
 🎯 Diskon: ${diskon}
 ⭐ Rating: ${p.rating_average}
-🛒 Terjual: ${p.count_sold}`;
+🛒 Terjual: ${p.count_sold}
+🔗 ${link}`;
 
 await kirimTelegram(
 pesan

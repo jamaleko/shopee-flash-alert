@@ -4,21 +4,81 @@ async function getDeals() {
 
 try {
 
-const payload=[{
-
+const payload = [{
 operationName:"ComponentInfoQuery",
 
 variables:{
 
 identifier:"deals",
+
 componentId:"605690011",
+
 current_session_id:"",
+
 cursor:0,
+
 device:"mobile",
+
 exposure_items:"",
 
 filters:
-"{\"rpc_ProductId\":[],\"category_id\":null,\"rpc_page_size\":20}"
+"{\"rpc_ProductId\":\"\",\"category_id\":null,\"rpc_page_size\":20}"
+
+},
+
+query:
+query ComponentInfoQuery(
+$identifier:String!,
+$componentId:String!,
+$current_session_id:String,
+$cursor:Int,
+$device:String,
+$exposure_items:String,
+$filters:String
+){
+
+componentInfo(
+identifier:$identifier
+componentId:$componentId
+current_session_id:$current_session_id
+cursor:$cursor
+device:$device
+exposure_items:$exposure_items
+filters:$filters
+){
+
+data{
+component{
+
+creative_name
+
+data{
+
+name
+
+price
+
+discounted_price
+
+rating_average
+
+count_sold
+
+image_url_mobile
+
+product_id
+
+labels{
+title
+}
+
+}
+
+}
+
+}
+
+}
 
 }
 
@@ -26,9 +86,15 @@ filters:
 
 
 const res=await axios.post(
+
 "https://gql.tokopedia.com/graphql/ComponentInfoQuery",
+
 payload,
+
 {
+
+timeout:30000,
+
 headers:{
 
 "accept":"*/*",
@@ -42,6 +108,9 @@ headers:{
 "referer":
 "https://www.tokopedia.com/",
 
+"origin":
+"https://www.tokopedia.com",
+
 "bd-device-id":
 "0311116359114134912",
 
@@ -52,9 +121,15 @@ headers:{
 "?1",
 
 "sec-ch-ua-platform":
-'"Android"'
+'"Android"',
+
+"accept-language":
+"en-GB,en-US;q=0.9,en;q=0.8"
+
 }
+
 }
+
 );
 
 console.log(
@@ -62,7 +137,7 @@ console.log(
 res.status
 );
 
-const items=
+const products=
 res.data?.[0]
 ?.data
 ?.componentInfo
@@ -70,71 +145,88 @@ res.data?.[0]
 ?.component
 ?.data;
 
-if(!items){
+if(!products){
 
 console.log(
-"Data kosong"
+JSON.stringify(
+res.data,
+null,
+2
+)
 );
 
 return;
 }
 
 console.log(
-"Jumlah:",
-items.length
+"TOTAL:",
+products.length
 );
 
-console.log("\n=== HASIL ===\n");
-
-items.forEach(
-(item,index)=>{
-
-const diskon=
-item.labels?.find(
-x=>x.position==="ri_ribbon"
-)?.title || "-";
+for(
+const p of products
+){
 
 console.log(
-`${index+1}. ${item.name}`
+"=================="
 );
 
 console.log(
-`Harga : ${item.price}`
+"Nama:",
+p.name
 );
 
 console.log(
-`Coret : ${item.discounted_price}`
+"Harga:",
+p.price
 );
 
 console.log(
-`Diskon : ${diskon}`
+"Diskon:",
+p.discounted_price
 );
 
 console.log(
-`Rating : ${item.rating_average}`
+"Rating:",
+p.rating_average
 );
 
 console.log(
-`Terjual : ${item.count_sold}`
+"Terjual:",
+p.count_sold
 );
 
 console.log(
-"--------------------"
+"Produk:",
+`https://tokopedia.com/p/${p.product_id}`
 );
 
-});
 }
-catch(e){
+
+}catch(e){
 
 console.log(
 "ERROR:",
-e.response?.status
+e.code
 );
 
 console.log(
-e.response?.data ||
 e.message
 );
+
+if(
+e.response
+){
+
+console.log(
+JSON.stringify(
+e.response.data,
+null,
+2
+)
+);
+
+}
 
 }
 

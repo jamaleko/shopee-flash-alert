@@ -1,58 +1,82 @@
-const axios=require("axios");
+const axios = require("axios");
 
-async function test(){
+async function getDeals() {
 
-try{
+try {
 
-const res=
-await axios.post(
+const payload = [{
 
-"https://shopee.co.id/api/v4/flash_sale/flash_sale_batch_get_items",
+operationName: "ComponentInfoQuery",
+
+variables: {
+
+identifier: "deals",
+componentId: "605690011",
+
+current_session_id: "",
+
+cursor: 0,
+
+device: "mobile",
+
+exposure_items: "",
+
+filters:
+"{\"rpc_ProductId\":[],\"category_id\":null,\"rpc_page_size\":20}"
+
+}
+
+}];
+
+
+const res = await axios.post(
+
+"https://gql.tokopedia.com/graphql/ComponentInfoQuery",
+
+payload,
 
 {
 
-promotionid:268083365429251,
-
-itemids:[
-43867563107,
-19850207725,
-40328681658,
-24633769824
-]
-
-},
-
-{
-
-headers:{
+headers: {
 
 "accept":"*/*",
+
+"accept-language":
+"id-ID,id;q=0.9,en-US;q=0.8",
+
+"content-type":
+"application/json",
 
 "user-agent":
 "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36",
 
 "referer":
-"https://shopee.co.id/flash_sale",
+"https://www.tokopedia.com/",
 
-"cookie":
-process.env.SHOPEE_COOKIE,
+"origin":
+"https://www.tokopedia.com",
 
-"af-ac-enc-dat":
-process.env.AF_DATA,
+"bd-device-id":
+"0311116359114134912",
 
-"af-ac-enc-sz-token":
-process.env.AF_TOKEN,
+"sec-ch-ua":
+'"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
 
-"x-requested-with":
-"XMLHttpRequest",
+"sec-ch-ua-mobile":
+"?1",
 
-"x-api-source":
-"rweb"
-
-}
+"sec-ch-ua-platform":
+'"Android"'
 
 }
 
+}
+
+);
+
+console.log(
+"STATUS:",
+res.status
 );
 
 console.log(
@@ -60,10 +84,10 @@ JSON.stringify(
 res.data,
 null,
 2
-)
-);
+));
 
-}catch(e){
+}
+catch(e){
 
 console.log(
 "ERROR:",
@@ -71,11 +95,12 @@ e.response?.status
 );
 
 console.log(
-e.response?.data
+e.response?.data ||
+e.message
 );
 
 }
 
 }
 
-test();
+getDeals();

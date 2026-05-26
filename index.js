@@ -150,7 +150,7 @@ p.url_mobile ||
 p.url_desktop;
 
 const id=
-${p.product_id}-${p.price};
+`${p.product_id}-${p.price}`;
 
 if(
 harga<=100000 &&

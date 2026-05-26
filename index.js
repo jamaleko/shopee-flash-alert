@@ -168,11 +168,9 @@ products.length
 for(const p of products){
 const link =
 
-p.url ||
-
-p.share_url ||
-
-`https://www.tokopedia.com/search?q=${encodeURIComponent(p.name)}`;
+p.url_mobile ||
+p.url_desktop ||
+"Link tidak ada";
   
 const harga=
 parseInt(
@@ -229,9 +227,9 @@ console.log(
 "Link:",
 link
 );
-console.log(
+/*console.log(
 Object.keys(p)
-);
+);*/
 const pesan=
 
 `🔥 TOKOPEDIA

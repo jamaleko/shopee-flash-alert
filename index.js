@@ -26,7 +26,7 @@ filters:
 
 },
 
-query:
+query:`
 query ComponentInfoQuery(
 $identifier:String!,
 $componentId:String!,
@@ -81,7 +81,7 @@ title
 }
 
 }
-
+`
 }];
 
 

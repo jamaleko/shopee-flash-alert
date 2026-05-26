@@ -1,7 +1,7 @@
 const axios=require("axios");
 const TelegramBot=require("node-telegram-bot-api");
 const BOT_TOKEN=
-  process.env.BOT_TOKENi;
+  process.env.BOT_TOKEN;
 const CHAT_ID=
   process.env.CHAT_ID;
 

@@ -1,44 +1,29 @@
 const axios=require("axios");
 const TelegramBot=require("node-telegram-bot-api");
-const BOT_TOKEN=
-  process.env.BOT_TOKEN;
-const CHAT_ID=
-  process.env.CHAT_ID;
 
-async function kirimTelegram(text){
-
-try{
-
-await axios.get(
-
-`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-
+const bot=
+new TelegramBot(
+process.env.BOT_TOKEN,
 {
-
-params:{
-
-chat_id:CHAT_ID,
-
-text:text
-
+polling:false
 }
-
-}
-
 );
 
-}catch(e){
+const chatId=
+process.env.CHAT_ID;
 
-console.log(
-"Telegram Error:",
-e.message
+const sent=
+new Set();
+
+function sleep(ms){
+
+return new Promise(
+r=>setTimeout(r,ms)
 );
 
 }
 
-}
-
-async function getDeals(){
+async function cekTokopedia(){
 
 try{
 
@@ -68,16 +53,15 @@ cursor:0
 },
 
 query:`query ComponentInfoQuery(
-$identifier: String!,
-$componentId: String!,
-$device: String!,
-$filters: String,
-$exposure_items: String,
-$refresh_type: String,
-$current_session_id: String,
-$cursor: Int
+$identifier:String!,
+$componentId:String!,
+$device:String!,
+$filters:String,
+$exposure_items:String,
+$refresh_type:String,
+$current_session_id:String,
+$cursor:Int
 ){
-
 componentInfo(
 identifier:$identifier,
 component_id:$componentId,
@@ -88,27 +72,22 @@ refresh_type:$refresh_type,
 current_session_id:$current_session_id,
 cursor:$cursor
 ){
-
 data
-__typename
-
 }
-
 }`
-
 }];
 
 
-const res=await axios({
+const res=
+await axios.post(
 
-method:"post",
-
-url:
 "https://gql.tokopedia.com/graphql/ComponentInfoQuery",
 
-timeout:60000,
+payload,
 
-data:payload,
+{
+
+timeout:30000,
 
 headers:{
 
@@ -118,32 +97,19 @@ headers:{
 "application/json",
 
 "user-agent":
-"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36",
+"Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109 Mobile Safari/537.36",
 
 "referer":
 "https://www.tokopedia.com/",
 
-"origin":
-"https://www.tokopedia.com",
-
-"accept-language":
-"en-GB,en-US;q=0.9,en;q=0.8",
-
 "bd-device-id":
-"0311116359114134912",
-
-"sec-ch-ua":
-'"Not_A Brand";v="99","Google Chrome";v="109","Chromium";v="109"',
-
-"sec-ch-ua-mobile":
-"?1",
-
-"sec-ch-ua-platform":
-'"Android"'
+"0311116359114134912"
 
 }
 
-});
+}
+
+);
 
 const data=
 res.data?.[0]
@@ -151,93 +117,49 @@ res.data?.[0]
 ?.componentInfo
 ?.data;
 
-if(!data){
-
-console.log("Tidak ada data");
-return;
-}
-
 const products=
-data.component.data;
+data.component.data || [];
 
 console.log(
 "TOTAL:",
 products.length
 );
 
-for(const p of products){
-const stok =
-p.stock ?? "Tidak diketahui";
-  
-const link =
+for(
+const p of products
+){
 
-p.url_mobile ||
-p.url_desktop ||
-"Link tidak ada";
-  
 const harga=
 parseInt(
 p.price
 .replace("Rp","")
 .replace(/\./g,"")
-.trim()
 );
 
 const diskon=
 p.labels?.find(
-x=>x.position==="ri_ribbon"
+x=>
+x.position==="ri_ribbon"
 )?.title || "0%";
 
-const persen=
-parseInt(
-diskon
-.replace("%","")
-);
+const stok=
+p.stock || "-";
+
+const link=
+p.url_mobile ||
+p.url_desktop;
+
+const id=
+${p.product_id}-${p.price};
 
 if(
-harga<=100000
+harga<=100000 &&
+!sent.has(id)
 ){
 
-console.log(
-"\n================="
-);
+sent.add(id);
 
-console.log(
-"Nama:",
-p.name
-);
-
-console.log(
-"Harga:",
-p.price
-);
-
-console.log(
-"Diskon:",
-diskon
-);
-
-console.log(
-"Terjual:",
-p.count_sold
-);
-
-console.log(
-"Rating:",
-p.rating_average
-);
-console.log(
-"Link:",
-link
-);
-console.log(
-"Stok:",
-p.stock
-);
-/*console.log(
-Object.keys(p)
-);*/
-const pesan=
+const msg=
 
 `🔥 TOKOPEDIA
 
@@ -248,29 +170,70 @@ ${p.name}
 ⭐ Rating: ${p.rating_average}
 🛒 Terjual: ${p.count_sold}
 📦 Stok: ${stok}
+
 🔗 ${link}`;
 
-await kirimTelegram(
-pesan
+await bot.sendMessage(
+chatId,
+msg
+);
+
+console.log(
+"Kirim:",
+p.name
 );
 
 }
 
 }
 
-}catch(e){
+return true;
+
+}
+catch(e){
 
 console.log(
 "ERROR:",
-e.code
-);
-
-console.log(
+e.response?.status||
 e.message
 );
 
-}
+return false;
 
 }
 
-getDeals();
+}
+
+(async()=>{
+
+while(true){
+
+const ok=
+await cekTokopedia();
+
+if(ok){
+
+console.log(
+"Sleep 30 menit..."
+);
+
+await sleep(
+1800000
+);
+
+}
+else{
+
+console.log(
+"Retry 30 detik..."
+);
+
+await sleep(
+30000
+);
+
+}
+
+}
+
+})();

@@ -42,8 +42,27 @@ async function getFlash() {
       res.status
     );
 
+    console.log(
+      JSON.stringify(
+        res.data,
+        null,
+        2
+      )
+    );
+    
     const items =
-    res.data.data.item_brief_list;
+    res.data?.data?.item_brief_list ||
+    res.data?.item_brief_list ||
+    [];
+    
+    if(items.length===0){
+    
+      console.log(
+        "item_brief_list kosong"
+      );
+    
+      return;
+    }
 
     console.log(
       "Jumlah item:",

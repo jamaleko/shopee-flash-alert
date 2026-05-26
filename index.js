@@ -1,60 +1,37 @@
 const axios = require("axios");
 
-const headers = {
-  "accept":"*/*",
-  "accept-language":"en-GB,en-US;q=0.9,en;q=0.8",
-
-  "referer":
-  "https://shopee.co.id/flash_sale?categoryId=0&promotionId=268078273540098",
-
-  "user-agent":
-  "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36",
-
-  "sec-ch-ua":
-  '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
-
-  "sec-ch-ua-mobile":"?1",
-
-  "sec-ch-ua-platform":
-  '"Android"',
-
-  "x-requested-with":
-  "XMLHttpRequest",
-
-  "x-api-source":
-  "pc",
-
-  "cookie":
-  process.env.SHOPEE_COOKIE,
-
-  "af-ac-enc-dat":
-  process.env.AF_DATA,
-
-  "af-ac-enc-sz-token":
-  process.env.AF_TOKEN
-}
-
 async function getFlash() {
+  try {
 
-  try{
-
-    // ambil item id flash sale
     const res = await axios.get(
-      "https://shopee.co.id/api/v4/flash_sale/get_all_itemids",
+      "https://shopee.co.id/api/v4/flash_sale/flash_sale_batch_get_items",
       {
         params:{
-          need_personalize:true,
           promotionid:"268078273540098",
-          sort_soldout:true,
-          tracker_info_version:1
+          categoryid:0,
+          limit:100,
+          offset:0
         },
-        headers
-      }
-    );
 
-    console.log(
-      "STATUS:",
-      res.status
+        headers:{
+          "accept":"*/*",
+
+          "referer":
+          "https://shopee.co.id/flash_sale?categoryId=0&promotionId=268078273540098",
+
+          "user-agent":
+          "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36",
+
+          "cookie":
+          process.env.SHOPEE_COOKIE,
+
+          "af-ac-enc-dat":
+          process.env.AF_DATA,
+
+          "af-ac-enc-sz-token":
+          process.env.AF_TOKEN
+        }
+      }
     );
 
     console.log(
@@ -64,60 +41,8 @@ async function getFlash() {
         2
       )
     );
-    
-    const items =
-    res.data?.data?.item_brief_list ||
-    res.data?.item_brief_list ||
-    [];
-    
-    if(items.length===0){
-    
-      console.log(
-        "item_brief_list kosong"
-      );
-    
-      return;
-    }
 
-    console.log(
-      "Jumlah item:",
-      items.length
-    );
-
-    const ids =
-    items
-    .slice(0,20)
-    .map(x=>x.itemid);
-
-    console.log(
-      "Item IDs:"
-    );
-
-    console.log(ids);
-
-
-    // ambil detail item
-    const detail =
-    await axios.get(
-      "https://shopee.co.id/api/v4/flash_sale/flash_sale_batch_get_items",
-      {
-        params:{
-          itemids:ids.join(","),
-          promotionid:"268078273540098"
-        },
-        headers
-      }
-    );
-
-    console.log(
-      JSON.stringify(
-        detail.data,
-        null,
-        2
-      )
-    );
-
-  }catch(e){
+  } catch(e){
 
     console.log(
       "ERROR:",
@@ -125,12 +50,9 @@ async function getFlash() {
     );
 
     console.log(
-      e.response?.data ||
-      e.message
+      e.response?.data
     );
-
   }
-
 }
 
 getFlash();

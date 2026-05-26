@@ -1,5 +1,41 @@
 const axios=require("axios");
 
+const BOT_TOKEN="ISI_BOT_TOKEN";
+const CHAT_ID="ISI_CHAT_ID";
+
+async function kirimTelegram(text){
+
+try{
+
+await axios.get(
+
+`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+
+{
+
+params:{
+
+chat_id:CHAT_ID,
+
+text:text
+
+}
+
+}
+
+);
+
+}catch(e){
+
+console.log(
+"Telegram Error:",
+e.message
+);
+
+}
+
+}
+
 async function getDeals(){
 
 try{
@@ -107,12 +143,6 @@ headers:{
 
 });
 
-
-console.log(
-"STATUS:",
-res.status
-);
-
 const data=
 res.data?.[0]
 ?.data
@@ -121,14 +151,7 @@ res.data?.[0]
 
 if(!data){
 
-console.log(
-JSON.stringify(
-res.data,
-null,
-2
-)
-);
-
+console.log("Tidak ada data");
 return;
 }
 
@@ -142,8 +165,31 @@ products.length
 
 for(const p of products){
 
+const harga=
+parseInt(
+p.price
+.replace("Rp","")
+.replace(/\./g,"")
+.trim()
+);
+
+const diskon=
+p.labels?.find(
+x=>x.position==="ri_ribbon"
+)?.title || "0%";
+
+const persen=
+parseInt(
+diskon
+.replace("%","")
+);
+
+if(
+harga<=100000
+){
+
 console.log(
-"================="
+"\n================="
 );
 
 console.log(
@@ -158,7 +204,7 @@ p.price
 
 console.log(
 "Diskon:",
-p.discounted_price
+diskon
 );
 
 console.log(
@@ -170,6 +216,23 @@ console.log(
 "Rating:",
 p.rating_average
 );
+
+const pesan=
+
+`🔥 TOKOPEDIA
+
+${p.name}
+
+💰 Harga: ${p.price}
+🎯 Diskon: ${diskon}
+⭐ Rating: ${p.rating_average}
+🛒 Terjual: ${p.count_sold}`;
+
+await kirimTelegram(
+pesan
+);
+
+}
 
 }
 
@@ -183,18 +246,6 @@ e.code
 console.log(
 e.message
 );
-
-if(e.response){
-
-console.log(
-JSON.stringify(
-e.response.data,
-null,
-2
-)
-);
-
-}
 
 }
 

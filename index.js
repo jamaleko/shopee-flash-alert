@@ -12,7 +12,7 @@ console.log(
 
 browser=
 await chromium.connectOverCDP(
-wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}
+`wss://production-sfo.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`
 );
 
 console.log(

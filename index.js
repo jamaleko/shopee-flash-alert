@@ -1,7 +1,7 @@
 const axios=require("axios");
 
-const BOT_TOKEN="ISI_BOT_TOKEN";
-const CHAT_ID="ISI_CHAT_ID";
+const BOT_TOKEN="BOT_TOKEN";
+const CHAT_ID="CHAT_ID";
 
 async function kirimTelegram(text){
 

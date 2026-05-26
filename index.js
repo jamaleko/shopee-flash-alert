@@ -8,9 +8,7 @@ async function getFlash() {
       {
         params:{
           promotionid:"268078273540098",
-          categoryid:0,
-          limit:100,
-          offset:0
+          soul_soldout:true
         },
 
         headers:{
@@ -42,18 +40,11 @@ async function getFlash() {
       )
     );
     console.log(
-"COOKIE:",
-process.env.SHOPEE_COOKIE?.length
-);
-
-console.log(
-"AF_DATA:",
-process.env.AF_DATA
-);
-
-console.log(
-"AF_TOKEN:",
-process.env.AF_TOKEN
+JSON.stringify(
+res.data,
+null,
+2
+).slice(0,500)
 );
 
   } catch(e){

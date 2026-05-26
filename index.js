@@ -119,7 +119,7 @@ res.data?.[0]
 ?.componentInfo
 ?.data;
 
-if(!raw){
+if(!data){
 
 console.log(
 JSON.stringify(

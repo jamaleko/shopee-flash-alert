@@ -41,6 +41,20 @@ async function getFlash() {
         2
       )
     );
+    console.log(
+"COOKIE:",
+process.env.SHOPEE_COOKIE?.length
+);
+
+console.log(
+"AF_DATA:",
+process.env.AF_DATA
+);
+
+console.log(
+"AF_TOKEN:",
+process.env.AF_TOKEN
+);
 
   } catch(e){
 

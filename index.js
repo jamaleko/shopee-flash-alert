@@ -166,6 +166,9 @@ products.length
 );
 
 for(const p of products){
+const stok =
+p.stock ?? "Tidak diketahui";
+  
 const link =
 
 p.url_mobile ||
@@ -227,6 +230,10 @@ console.log(
 "Link:",
 link
 );
+console.log(
+"Stok:",
+p.stock
+);
 /*console.log(
 Object.keys(p)
 );*/
@@ -240,6 +247,7 @@ ${p.name}
 🎯 Diskon: ${diskon}
 ⭐ Rating: ${p.rating_average}
 🛒 Terjual: ${p.count_sold}
+📦 Stok: ${stok}
 🔗 ${link}`;
 
 await kirimTelegram(

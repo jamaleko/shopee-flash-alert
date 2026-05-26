@@ -172,12 +172,7 @@ p.url ||
 
 p.share_url ||
 
-p.applink?.replace(
-"tokopedia://product/",
-"https://www.tokopedia.com/-/p/"
-) ||
-
-"Link tidak tersedia";
+`https://www.tokopedia.com/search?q=${encodeURIComponent(p.name)}`;
   
 const harga=
 parseInt(

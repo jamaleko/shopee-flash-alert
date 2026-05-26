@@ -9,16 +9,54 @@ const payload=[{
 operationName:"ComponentInfoQuery",
 
 variables:{
+
 identifier:"deals",
+
 componentId:"605690011",
-current_session_id:"",
-cursor:0,
+
+filters:
+"{\"rpc_ProductId\":\"\",\"category_id\":null,\"rpc_page_size\":\"20\",\"rpc_page_number\":\"1\",\"rpc_CampaignId\":\"0\",\"rpc_UserID\":\"2770349\",\"rpc_PinnedProduct\":\"\",\"rpc_UserAddressId\":\"12290452\",\"rpc_UserCityId\":\"72\",\"rpc_UserDistrictId\":\"797\",\"rpc_UserLat\":\"-0.6973589999999971\",\"rpc_UserLong\":\"102.85148370000002\",\"rpc_UserPostCode\":\"29274\",\"rpc_UserWarehouseId\":\"0\",\"rpc_UserWarehouseIds\":\"\",\"l_name\":\"sre\"}",
+
 device:"mobile",
+
+refresh_type:"0",
+
+current_session_id:"",
+
 exposure_items:"",
-filters:"{\"rpc_ProductId\":\"\",\"category_id\":null,\"rpc_page_size\":20}"
+
+cursor:0
+
 },
 
-query:"query ComponentInfoQuery($identifier:String!,$componentId:String!,$current_session_id:String,$cursor:Int,$device:String,$exposure_items:String,$filters:String){componentInfo(identifier:$identifier,componentId:$componentId,current_session_id:$current_session_id,cursor:$cursor,device:$device,exposure_items:$exposure_items,filters:$filters){data}}"
+query:`query ComponentInfoQuery(
+$identifier: String!,
+$componentId: String!,
+$device: String!,
+$filters: String,
+$exposure_items: String,
+$refresh_type: String,
+$current_session_id: String,
+$cursor: Int
+){
+
+componentInfo(
+identifier:$identifier,
+component_id:$componentId,
+device:$device,
+filters:$filters,
+exposure_items:$exposure_items,
+refresh_type:$refresh_type,
+current_session_id:$current_session_id,
+cursor:$cursor
+){
+
+data
+__typename
+
+}
+
+}`
 
 }];
 
@@ -27,7 +65,8 @@ const res=await axios({
 
 method:"post",
 
-url:"https://gql.tokopedia.com/graphql/ComponentInfoQuery",
+url:
+"https://gql.tokopedia.com/graphql/ComponentInfoQuery",
 
 timeout:60000,
 
@@ -55,21 +94,6 @@ headers:{
 "bd-device-id":
 "0311116359114134912",
 
-"x-source":
-"tokopedia-lite",
-
-"x-device":
-"mobile",
-
-"x-user-id":
-"0",
-
-"x-tkpd-userid":
-"0",
-
-"x-tkpd-sessionid":
-Date.now().toString(),
-
 "sec-ch-ua":
 '"Not_A Brand";v="99","Google Chrome";v="109","Chromium";v="109"',
 
@@ -89,6 +113,14 @@ console.log(
 res.status
 );
 
+const raw=
+res.data?.[0]
+?.data
+?.componentInfo
+?.data;
+
+if(!raw){
+
 console.log(
 JSON.stringify(
 res.data,
@@ -96,6 +128,53 @@ null,
 2
 )
 );
+
+return;
+}
+
+const data=
+JSON.parse(raw);
+
+const products=
+data.component.data;
+
+console.log(
+"TOTAL:",
+products.length
+);
+
+for(const p of products){
+
+console.log(
+"================="
+);
+
+console.log(
+"Nama:",
+p.name
+);
+
+console.log(
+"Harga:",
+p.price
+);
+
+console.log(
+"Diskon:",
+p.discounted_price
+);
+
+console.log(
+"Terjual:",
+p.count_sold
+);
+
+console.log(
+"Rating:",
+p.rating_average
+);
+
+}
 
 }catch(e){
 

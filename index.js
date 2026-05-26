@@ -1,7 +1,9 @@
 const axios=require("axios");
-
-const BOT_TOKEN="BOT_TOKEN";
-const CHAT_ID="CHAT_ID";
+const TelegramBot=require("node-telegram-bot-api");
+const BOT_TOKEN=
+  process.env.BOT_TOKEN;
+const CHAT_ID=
+  process.env.CHAT_ID;
 
 async function kirimTelegram(text){
 

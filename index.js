@@ -1,6 +1,6 @@
 const axios=require("axios");
 const TelegramBot=require("node-telegram-bot-api");
-
+//ini adalah program space
 const bot=
 new TelegramBot(
 process.env.BOT_TOKEN,

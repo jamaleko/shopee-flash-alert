@@ -1,13 +1,28 @@
 const axios = require("axios");
 
-const headers = {
+const headers:{
   "accept":"*/*",
+  "accept-language":"en-GB,en-US;q=0.9,en;q=0.8",
 
   "referer":
   "https://shopee.co.id/flash_sale?categoryId=0&promotionId=268078273540098",
 
   "user-agent":
   "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Mobile Safari/537.36",
+
+  "sec-ch-ua":
+  '"Not_A Brand";v="99", "Google Chrome";v="109", "Chromium";v="109"',
+
+  "sec-ch-ua-mobile":"?1",
+
+  "sec-ch-ua-platform":
+  '"Android"',
+
+  "x-requested-with":
+  "XMLHttpRequest",
+
+  "x-api-source":
+  "pc",
 
   "cookie":
   process.env.SHOPEE_COOKIE,
@@ -17,7 +32,7 @@ const headers = {
 
   "af-ac-enc-sz-token":
   process.env.AF_TOKEN
-};
+}
 
 async function getFlash() {
 

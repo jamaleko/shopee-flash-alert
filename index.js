@@ -4,22 +4,18 @@ async function getDeals() {
 
 try {
 
-const payload = [{
+const payload=[{
 
-operationName: "ComponentInfoQuery",
+operationName:"ComponentInfoQuery",
 
-variables: {
+variables:{
 
-identifier: "deals",
-componentId: "605690011",
-
-current_session_id: "",
-
-cursor: 0,
-
-device: "mobile",
-
-exposure_items: "",
+identifier:"deals",
+componentId:"605690011",
+current_session_id:"",
+cursor:0,
+device:"mobile",
+exposure_items:"",
 
 filters:
 "{\"rpc_ProductId\":[],\"category_id\":null,\"rpc_page_size\":20}"
@@ -29,20 +25,13 @@ filters:
 }];
 
 
-const res = await axios.post(
-
+const res=await axios.post(
 "https://gql.tokopedia.com/graphql/ComponentInfoQuery",
-
 payload,
-
 {
-
-headers: {
+headers:{
 
 "accept":"*/*",
-
-"accept-language":
-"id-ID,id;q=0.9,en-US;q=0.8",
 
 "content-type":
 "application/json",
@@ -52,9 +41,6 @@ headers: {
 
 "referer":
 "https://www.tokopedia.com/",
-
-"origin":
-"https://www.tokopedia.com",
 
 "bd-device-id":
 "0311116359114134912",
@@ -67,11 +53,8 @@ headers: {
 
 "sec-ch-ua-platform":
 '"Android"'
-
 }
-
 }
-
 );
 
 console.log(
@@ -79,13 +62,67 @@ console.log(
 res.status
 );
 
-console.log(
-JSON.stringify(
-res.data,
-null,
-2
-));
+const items=
+res.data?.[0]
+?.data
+?.componentInfo
+?.data
+?.component
+?.data;
 
+if(!items){
+
+console.log(
+"Data kosong"
+);
+
+return;
+}
+
+console.log(
+"Jumlah:",
+items.length
+);
+
+console.log("\n=== HASIL ===\n");
+
+items.forEach(
+(item,index)=>{
+
+const diskon=
+item.labels?.find(
+x=>x.position==="ri_ribbon"
+)?.title || "-";
+
+console.log(
+${index+1}. ${item.name}
+);
+
+console.log(
+Harga : ${item.price}
+);
+
+console.log(
+Coret : ${item.discounted_price}
+);
+
+console.log(
+Diskon : ${diskon}
+);
+
+console.log(
+Rating : ${item.rating_average}
+);
+
+console.log(
+Terjual : ${item.count_sold}
+);
+
+console.log(
+"--------------------"
+);
+
+});
 }
 catch(e){
 

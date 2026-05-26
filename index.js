@@ -108,7 +108,7 @@ process.env.AF_DATA,
 process.env.AF_TOKEN,
 
 "sec-ch-ua":
-"Not_A Brand";v="99","Google Chrome";v="109","Chromium";v="109",
+`"Not_A Brand";v="99","Google Chrome";v="109","Chromium";v="109"`,
 
 "sec-ch-ua-mobile":
 "?1",

@@ -1,7 +1,7 @@
 const axios=require("axios");
 const TelegramBot=require("node-telegram-bot-api");
 const BOT_TOKEN=
-  process.env.BOT_TOKEN;
+  process.env.BOT_TOKENi;
 const CHAT_ID=
   process.env.CHAT_ID;
 
@@ -228,6 +228,9 @@ p.rating_average
 console.log(
 "Link:",
 link
+);
+console.log(
+Object.keys(p)
 );
 const pesan=
 

@@ -166,9 +166,19 @@ products.length
 );
 
 for(const p of products){
-const link=
+const link =
 
-`https://www.tokopedia.com/-/p/${p.product_id}`;
+p.url ||
+
+p.share_url ||
+
+p.applink?.replace(
+"tokopedia://product/",
+"https://www.tokopedia.com/-/p/"
+) ||
+
+"Link tidak tersedia";
+  
 const harga=
 parseInt(
 p.price

@@ -95,27 +95,27 @@ x=>x.position==="ri_ribbon"
 )?.title || "-";
 
 console.log(
-${index+1}. ${item.name}
+`${index+1}. ${item.name}`
 );
 
 console.log(
-Harga : ${item.price}
+`Harga : ${item.price}`
 );
 
 console.log(
-Coret : ${item.discounted_price}
+`Coret : ${item.discounted_price}`
 );
 
 console.log(
-Diskon : ${diskon}
+`Diskon : ${diskon}`
 );
 
 console.log(
-Rating : ${item.rating_average}
+`Rating : ${item.rating_average}`
 );
 
 console.log(
-Terjual : ${item.count_sold}
+`Terjual : ${item.count_sold}`
 );
 
 console.log(

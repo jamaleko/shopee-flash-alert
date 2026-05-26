@@ -1,19 +1,9 @@
 const axios=require("axios");
-const TelegramBot=require("node-telegram-bot-api");
-//ini adalah program space
-const bot=
-new TelegramBot(
-process.env.BOT_TOKEN,
-{
-polling:false
-}
-);
 
-const chatId=
-process.env.CHAT_ID;
+const BOT_TOKEN=process.env.BOT_TOKEN;
+const CHAT_ID=process.env.CHAT_ID;
 
-const sent=
-new Set();
+const cacheHarga={};
 
 function sleep(ms){
 
@@ -23,7 +13,32 @@ r=>setTimeout(r,ms)
 
 }
 
-async function cekTokopedia(){
+async function kirimTelegram(text){
+
+try{
+
+await axios.get(
+`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+{
+params:{
+chat_id:CHAT_ID,
+text:text
+}
+}
+);
+
+}catch(e){
+
+console.log(
+"Telegram Error:",
+e.message
+);
+
+}
+
+}
+
+async function getDeals(){
 
 try{
 
@@ -52,7 +67,8 @@ cursor:0
 
 },
 
-query:`query ComponentInfoQuery(
+query:`
+query ComponentInfoQuery(
 $identifier:String!,
 $componentId:String!,
 $device:String!,
@@ -62,7 +78,9 @@ $refresh_type:String,
 $current_session_id:String,
 $cursor:Int
 ){
+
 componentInfo(
+
 identifier:$identifier,
 component_id:$componentId,
 device:$device,
@@ -71,23 +89,34 @@ exposure_items:$exposure_items,
 refresh_type:$refresh_type,
 current_session_id:$current_session_id,
 cursor:$cursor
+
 ){
+
 data
+__typename
+
 }
-}`
+
+}
+`
+
 }];
 
 
-const res=
-await axios.post(
+console.log(
+"Request Tokopedia..."
+);
 
+const res=await axios({
+
+method:"post",
+
+url:
 "https://gql.tokopedia.com/graphql/ComponentInfoQuery",
 
-payload,
+timeout:60000,
 
-{
-
-timeout:30000,
+data:payload,
 
 headers:{
 
@@ -102,14 +131,28 @@ headers:{
 "referer":
 "https://www.tokopedia.com/",
 
+"origin":
+"https://www.tokopedia.com",
+
+"accept-language":
+"en-US,en;q=0.9",
+
 "bd-device-id":
-"0311116359114134912"
+"0311116359114134912",
+
+"sec-ch-ua":
+'"Not_A Brand";v="99","Google Chrome";v="109","Chromium";v="109"',
+
+"sec-ch-ua-mobile":
+"?1",
+
+"sec-ch-ua-platform":
+'"Android"'
 
 }
 
-}
+});
 
-);
 
 const data=
 res.data?.[0]
@@ -117,49 +160,110 @@ res.data?.[0]
 ?.componentInfo
 ?.data;
 
+if(!data){
+
+console.log(
+"Tidak ada data"
+);
+
+return;
+
+}
+
 const products=
-data.component.data || [];
+data.component.data;
 
 console.log(
 "TOTAL:",
 products.length
 );
 
-for(
-const p of products
-){
+for(const p of products){
 
 const harga=
 parseInt(
 p.price
 .replace("Rp","")
 .replace(/\./g,"")
+.trim()
 );
 
 const diskon=
 p.labels?.find(
-x=>
-x.position==="ri_ribbon"
+x=>x.position==="ri_ribbon"
 )?.title || "0%";
 
 const stok=
-p.stock || "-";
+p.stock || 0;
 
 const link=
 p.url_mobile ||
-p.url_desktop;
+p.url_desktop ||
+"https://www.tokopedia.com";
+
+if(harga<=100000){
 
 const id=
-`${p.product_id}-${p.price}`;
+p.product_id;
 
 if(
-harga<=100000 &&
-!sent.has(id)
+
+cacheHarga[id] &&
+cacheHarga[id]===harga
+
 ){
 
-sent.add(id);
+console.log(
+"Skip:",
+p.name
+);
 
-const msg=
+continue;
+
+}
+
+cacheHarga[id]=harga;
+
+console.log(
+"\n==============="
+);
+
+console.log(
+"Nama:",
+p.name
+);
+
+console.log(
+"Harga:",
+p.price
+);
+
+console.log(
+"Diskon:",
+diskon
+);
+
+console.log(
+"Terjual:",
+p.count_sold
+);
+
+console.log(
+"Rating:",
+p.rating_average
+);
+
+console.log(
+"Stok:",
+stok
+);
+
+console.log(
+"Link:",
+link
+);
+
+const pesan=
 
 `🔥 TOKOPEDIA
 
@@ -173,59 +277,53 @@ ${p.name}
 
 🔗 ${link}`;
 
-await bot.sendMessage(
-chatId,
-msg
-);
-
-console.log(
-"Kirim:",
-p.name
+await kirimTelegram(
+pesan
 );
 
 }
 
 }
 
-return true;
-
-}
-catch(e){
+}catch(e){
 
 console.log(
 "ERROR:",
-e.response?.status||
 e.message
 );
 
-return false;
+throw e;
 
 }
 
 }
 
-(async()=>{
+async function start(){
 
 while(true){
 
-const ok=
-await cekTokopedia();
-
-if(ok){
+try{
 
 console.log(
-"Sleep 30 menit..."
+"\nMulai cek:",
+new Date()
+.toLocaleString()
+);
+
+await getDeals();
+
+console.log(
+"\nSleep 30 menit..."
 );
 
 await sleep(
-1800000
+30*60*1000
 );
 
-}
-else{
+}catch(e){
 
 console.log(
-"Retry 30 detik..."
+"\nRetry 30 detik..."
 );
 
 await sleep(
@@ -236,4 +334,6 @@ await sleep(
 
 }
 
-})();
+}
+
+start();

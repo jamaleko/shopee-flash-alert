@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-async function getFlashSale() {
+async function getFlash() {
   try {
 
     const res = await axios.get(
@@ -15,29 +15,32 @@ async function getFlashSale() {
 
         headers: {
           "accept":"*/*",
-          "referer":"https://shopee.co.id/flash_sale",
-          "user-agent":
-          "Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109 Safari/537.36",
+          "referer":
+          "https://shopee.co.id/flash_sale?categoryId=0&promotionId=268078273540098",
 
-          "sec-fetch-mode":"cors",
-          "sec-fetch-site":"same-origin"
+          "user-agent":
+          process.env.UA,
+
+          "cookie":
+          process.env.SHOPEE_COOKIE,
+
+          "af-ac-enc-dat":
+          process.env.AF_DATA,
+
+          "af-ac-enc-sz-token":
+          process.env.AF_TOKEN
         }
       }
     );
 
     console.log(
-      "Status:",
+      "STATUS:",
       res.status
     );
 
     console.log(
-      "Jumlah item:",
-      res.data.data.item_brief_list.length
-    );
-
-    console.log(
       JSON.stringify(
-        res.data.data.item_brief_list[0],
+        res.data,
         null,
         2
       )
@@ -47,14 +50,13 @@ async function getFlashSale() {
 
     console.log(
       "ERROR:",
-      e.response?.status || e.message
+      e.response?.status
     );
 
     console.log(
       e.response?.data
     );
-
   }
 }
 
-getFlashSale();
+getFlash();

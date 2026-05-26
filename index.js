@@ -113,7 +113,7 @@ console.log(
 res.status
 );
 
-const raw=
+const data=
 res.data?.[0]
 ?.data
 ?.componentInfo
@@ -131,9 +131,6 @@ null,
 
 return;
 }
-
-const data=
-JSON.parse(raw);
 
 const products=
 data.component.data;
